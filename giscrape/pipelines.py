@@ -4,5 +4,5 @@
 # See: http://doc.scrapy.org/topics/item-pipeline.html
 
 class GiscrapePipeline(object):
-    def process_item(self, domain, item):
+    def process_item(self, item, spider):
         return item

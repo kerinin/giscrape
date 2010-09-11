@@ -1,11 +1,14 @@
-from scrapy.contrib.spiders import CrawlSpider, Rule
-from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+import re
+
 from scrapy.selector import HtmlXPathSelector
-from items import RentalItem, SaleItem
+from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.contrib.spiders import CrawlSpider, Rule
+from giscrape.items import *
 
 class TruliaSpider(CrawlSpider):
-  name = "trulia"
-  allowed_domains = ["www.trulia.com"]
+  name = 'trulia'
+  allowed_domains = ['trulia.com']
+
   start_urls = [
       "http://www.trulia.com/for_sale/Austin,TX/",
       "http://www.trulia.com/for_rent/Austin,TX/"
