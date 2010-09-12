@@ -1,25 +1,26 @@
 import re
 
 from scrapy.selector import HtmlXPathSelector
-from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor, BaseSgmlLinkExtractor
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from giscrape.items import *
+from scrapy.item import Item, Field
 
 class TruliaSpider(CrawlSpider):
   name = 'trulia'
-  allowed_domains = ['trulia.com']
+  allowed_domains = ['www.trulia.com']
 
   start_urls = [
       "http://www.trulia.com/for_sale/Austin,TX/",
-      "http://www.trulia.com/for_rent/Austin,TX/"
+      "http://www.trulia.com/for_rent/Austin,TX/",
   ]
   
   rules = (
-    Rule( SgmlLinkExtractor(restrict_xpaths='//a.pg_link') ),
-    Rule( SgmlLinkExtractor(allow='www.trulia.com/rental'),callback='parse_rental' ),
-    Rule( SgmlLinkExtractor(allow='www.trulia.com/property'),callback='parse_for_sale' )
+    Rule( SgmlLinkExtractor(restrict_xpaths='//a[@class="pg_link"]') ),
+    Rule( SgmlLinkExtractor(allow='www.trulia.com/rental'),callback='parse_for_rental' ),
+    Rule( SgmlLinkExtractor(allow='www.trulia.com/property'),callback='parse_for_sale' ),
   )
-  
+        
   def parse_rental(self, response):
     hxs = HtmlXPathSelector(response)
     
@@ -48,4 +49,4 @@ class TruliaSpider(CrawlSpider):
     
     rental['public_records'] = hxs.select('id("property_public_info_module")/ul/li/span/text()').extract()
     
-    return items
+    return rental
