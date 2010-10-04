@@ -47,6 +47,7 @@ class SaleItem(Item):
   date_listed = Field()
   mls_id = Field()
   
+  descriptive_title = Field()
   description = Field()
   
   additional_fields = Field()

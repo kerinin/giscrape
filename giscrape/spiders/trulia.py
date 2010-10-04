@@ -58,3 +58,31 @@ class TruliaSpider(CrawlSpider):
     rental['public_records'] = hxs.select('id("property_public_info_module")/ul/li/span/text()').extract()
     
     return rental
+    
+  def parse_for_sale(self, response):
+    hxs = HtmlXPathSelector(response)
+    
+    sale = SaleItem()
+    sale['url'] = response.url
+    sale['address'] = hxs.select('//h1[@class="address"]/text()').extract()
+    
+    sale['price'] = hxs.select('//div[@class="price"]/text()[1]').re(r'$(\n+)')
+
+    sale['bedrooms'] = hxs.select('//th[text()="Bedrooms:"]/../td/text()').extract()
+    sale['bathrooms'] = hxs.select('//th[text()="Bathrooms:"]/../td/text()').extract()
+    sale['property_type'] = hxs.select('//th[text()="Property type:"]/../td/text()').extract()
+    sale['size'] = hxs.select('//th[text()="Size:"]/../td/text()').re(r'\n+')
+    sale['lot'] = hxs.select('//th[text()="Lot:"]/../td/text()').extract()
+    sale['price_per_sf'] = 
+    sale['year_built'] = hxs.select('//th[text()="Year built:"]/../td/text()').extract()
+    sale['date_listed'] = hxs.select('//th[text()="Added on Trulia:"]/../td/text()').extract()
+    sale['mls_id'] = hxs.select('//th[text()="MLS/ID:"]/../td/text()').extract()
+    
+    sale['descriptive_title'] = hxs.select('//h2[@class="descriptive_title"]/text()').extract()
+    sale['description'] = hxs.select('//div[@class="listing_description_module"]/text()').extract()
+    
+    sale['additional_fields'] = hxs.select('id("property_listing_details_module")/ul/li/span/text()').extract()
+    
+    sale['public_records'] = hxs.select('id("property_public_info_module")/ul/li/span/text()').extract()
+    
+    return sale
