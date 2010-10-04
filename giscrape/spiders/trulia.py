@@ -21,8 +21,8 @@ class TruliaSpider(CrawlSpider):
   allowed_domains = ['www.trulia.com']
 
   start_urls = [
-      "http://www.trulia.com/for_sale/Austin,TX/",
-      #"http://www.trulia.com/for_rent/Austin,TX/",
+      #"http://www.trulia.com/for_sale/Austin,TX/",
+      "http://www.trulia.com/for_rent/Austin,TX/",
   ]
   
   rules = (
@@ -37,13 +37,14 @@ class TruliaSpider(CrawlSpider):
     l.add_value('url', response.url)
     l.add_xpath('address', '//h1[@class="address"]/text()')
     
-    l.add_xpath('price', '//h1[@class="address"]/text()', re=r'$(\n+)')
+    l.add_xpath('price', '//h1[@class="address"]/text()', re=r'([\d|,]+)')
     l.add_xpath('price_period', '//div[@class="price"]/span[@class="normal"]/text()')
     
     l.add_xpath('bedrooms', '//th[text()="Bedrooms:"]/../td/text()')
-    l.add_xpath('bathrooms', '//th[text()="Bathrooms:"]/../td/text()')
+    l.add_xpath('bathrooms', '//th[text()="Bathrooms:"]/../td/text()', re=r'(\d+)')
+    l.add_xpath('powder_rooms', '//th[text()="Bathrooms:"]/../td/text()', re=r', (\d+)')
     l.add_xpath('property_type', '//th[text()="Property type:"]/../td/text()')
-    l.add_xpath('size', '//th[text()="Size:"]/../td/text()', re=r'\n+')
+    l.add_xpath('size', '//th[text()="Size:"]/../td/text()', re=r'([\d|,]+) sqft')
     l.add_xpath('lot', '//th[text()="Lot:"]/../td/text()')
     l.add_xpath('year_built', '//th[text()="Year built:"]/../td/text()')
     l.add_xpath('lease_term', '//th[text()="Terms of lease:"]/../td/text()')
@@ -66,12 +67,13 @@ class TruliaSpider(CrawlSpider):
     l.add_value('url', response.url)
     l.add_xpath('address', '//h1[@class="address"]/text()')
     
-    l.add_xpath('price', '//div[@class="price"]/text()[1]', re=r'$(\n+)')
+    l.add_xpath('price', '//div[@class="price"]/text()[1]', re=r'([\d|,]+)')
 
     l.add_xpath('bedrooms', '//th[text()="Bedrooms:"]/../td/text()')
-    l.add_xpath('bathrooms', '//th[text()="Bathrooms:"]/../td/text()')
+    l.add_xpath('bathrooms', '//th[text()="Bathrooms:"]/../td/text()', re=r'(\d+)')
+    l.add_xpath('powder_rooms', '//th[text()="Bathrooms:"]/../td/text()', re=r', (\d+)')
     l.add_xpath('property_type', '//th[text()="Property type:"]/../td/text()')
-    l.add_xpath('size', '//th[text()="Size:"]/../td/text()', re=r'\n+')
+    l.add_xpath('size', '//th[text()="Size:"]/../td/text()', re=r'([\d|,]+) sqft')
     l.add_xpath('lot', '//th[text()="Lot:"]/../td/text()')
     l.add_xpath('price_per_sf', '//th[text()="Price/sqft:"]/../td/text()')
     l.add_xpath('year_built', '//th[text()="Year built:"]/../td/text()')

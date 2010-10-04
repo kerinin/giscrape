@@ -20,8 +20,6 @@ class SQLBackend(object):
     dispatcher.connect(self.item_passed, signal=signals.item_passed)
       
   def engine_started(self):
-    log.msg("opening database connection")
-    
     self.engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
     self.metadata = orm.Base.metadata
     self.metadata.create_all(self.engine) 
@@ -32,7 +30,6 @@ class SQLBackend(object):
       
   def item_passed(self, item, spider, output):
     session = self.Session()
-    log.msg("Starting SQL handling")
     
     try:
       if( isinstance(output, items.RentalItem) ):
@@ -44,7 +41,6 @@ class SQLBackend(object):
     except Fail:
       log.msg("SQL handling failed")
     else:
-      log.msg("adding %s" % obj)
       session.add( obj )
       session.commit()
       
