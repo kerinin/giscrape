@@ -18,3 +18,6 @@ NEWSPIDER_MODULE = 'giscrape.spiders'
 DEFAULT_ITEM_CLASS = 'giscrape.items.GiscrapeItem'
 USER_AGENT = '%s/%s' % (BOT_NAME, BOT_VERSION)
 
+ITEM_PIPELINES = [
+    'giscrape.pipeline.GiscrapePipeline',
+]

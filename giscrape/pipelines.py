@@ -5,4 +5,8 @@
 
 class GiscrapePipeline(object):
     def process_item(self, item, spider):
-        return item
+      #Validate
+      
+      #Persist
+      
+      return item
