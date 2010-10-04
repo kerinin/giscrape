@@ -8,33 +8,36 @@ from formencode import validators
 
 Base = declarative_base()
 
-class Instantiator:
-  def __init__(self, **props):
-    for key in props.keys():
-      value = ( props[key][0] if isinstance( props[key], list ) else props[key] )
+def init(self, **props):
+  for key in props.keys():
+    value = ( props[key][0] if isinstance( props[key], list ) else props[key] )
+    value = value[0] if isinstance(value,list) else value
+    
+    if value == '\xe2':
+      value = None
       
-      if value == '\xe2':
-        value = None
-        
-      if key == 'date_listed':
-        self.date_listed = None if (value == '180+ days ago') else datetime.now() - timedelta( int( re.findall('(\d+) days ago', value)[0] ) )
-      elif key == 'price_per_sf' or key == 'price' or key == 'size':
-        setattr(self, key, value.replace(',','').strip('$') )
-      elif key == 'lot':
-        by_sf = re.compile(r'([\d|,]+) sqft')
-        by_acre = re.compile(r'([\d|,|.]+) acres')
-        if by_sf.search(value):
-          self.lot = by_sf.findall(value)[0]
-        elif by_acre.search(value):
-          self.lot = int( 43560.0 * float( by_acre.findall(value)[0].replace(',','') ) )
-      elif key == 'address' and 'Address Not Disclosed' in value:
-        pass
-      else:
-        setattr(self, key, value)
-        
-class Rental(Base, Instantiator):
+    if key == 'date_listed':
+      self.date_listed = None if (value == '180+ days ago') else datetime.now() - timedelta( int( re.findall('(\d+) days ago', value)[0] ) )
+    elif key == 'price_per_sf' or key == 'price' or key == 'size':
+      setattr(self, key, int( value.replace(',','').strip('$') ) )
+    elif key == 'lot':
+      by_sf = re.compile(r'([\d|,]+) sqft')
+      by_acre = re.compile(r'([\d|,|.]+) acres')
+      if by_sf.search(value):
+        self.lot = by_sf.findall(value)[0]
+      elif by_acre.search(value):
+        self.lot = int( 43560.0 * float( by_acre.findall(value)[0].replace(',','') ) )
+    elif key == 'address' and 'Address Not Disclosed' in value:
+      pass
+    else:
+      setattr(self, key, value)
+     
+class Rental(Base):
   __tablename__ = 'rental'
     
+  def __init__(self, **props):
+    init(self,**props)
+        
   id = Column(Integer, primary_key=True)
   url = Column(String, index=True)
   address = Column(String)
@@ -45,7 +48,7 @@ class Rental(Base, Instantiator):
   bathrooms =     Column(Float, nullable=True, index=True)
   powder_rooms =  Column(Integer, nullable=True, index=True) 
   property_type = Column(String, nullable=True)
-  size =          Column(Integer, nullable=True, index=True)
+  size =          Column(String, nullable=True, index=True)
   lot =           Column(Integer, nullable=True)
   year_built =    Column(Integer, nullable=True, index=True)
   lease_term =    Column(String, nullable=True)
@@ -60,9 +63,12 @@ class Rental(Base, Instantiator):
   
   public_records =    Column(String, nullable=True)
   
-class Sale(Base, Instantiator):
+class Sale(Base):
   __tablename__ = 'for_sale'
   
+  def __init__(self, **props):
+    init(self,**props)
+    
   id = Column(Integer, primary_key=True)
   url = Column(String, index=True)
   address = Column(String)
