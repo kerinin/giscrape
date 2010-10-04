@@ -22,7 +22,7 @@ class TruliaSpider(CrawlSpider):
 
   start_urls = [
       "http://www.trulia.com/for_sale/Austin,TX/",
-      "http://www.trulia.com/for_rent/Austin,TX/",
+      #"http://www.trulia.com/for_rent/Austin,TX/",
   ]
   
   rules = (

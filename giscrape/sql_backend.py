@@ -9,6 +9,9 @@ import orm
 
 log.start()
 
+class Fail(StandardError):
+  pass
+  
 class SQLBackend(object):
   
   def __init__(self):
@@ -29,6 +32,7 @@ class SQLBackend(object):
       
   def item_passed(self, item, spider, output):
     session = self.Session()
+    log.msg("Starting SQL handling")
     
     try:
       if( isinstance(output, items.RentalItem) ):
@@ -36,9 +40,11 @@ class SQLBackend(object):
       elif( isinstance(output, items.SaleItem) ):
         obj = orm.Sale( **output )
       else:
-        raise StandardError, 'unknown data type'
-    except StandardError:
-      pass
+        raise Fail, 'unknown data type'
+    except Fail:
+      log.msg("SQL handling failed")
     else:
+      log.msg("adding %s" % obj)
       session.add( obj )
       session.commit()
+      
