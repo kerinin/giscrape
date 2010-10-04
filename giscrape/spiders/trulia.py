@@ -3,6 +3,7 @@ import re
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor, BaseSgmlLinkExtractor
 from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.loader import XPathItemLoader
 from giscrape.items import *
 from scrapy.item import Item, Field
 from scrapy import log
@@ -49,12 +50,12 @@ class TruliaSpider(CrawlSpider):
     l.add_xpath('date_listed', '//th[text()="Added on Trulia:"]/../td/text()')
     l.add_xpath('mls_id', '//th[text()="MLS/ID:"]/../td/text()')
     
-    l.add_xpath('descriptive_title'] = hxs.select('//h2[@class="descriptive_title"]/text()')
-    l.add_xpath('description'] = hxs.select('//div[@class="listing_description_module"]/text()')
+    l.add_xpath('descriptive_title', '//h2[@class="descriptive_title"]/text()')
+    l.add_xpath('description', '//div[@class="listing_description_module"]/text()')
     
-    l.add_xpath('additional_fields'] = hxs.select('id("property_listing_details_module")/ul/li/span/text()')
+    l.add_xpath('additional_fields', 'id("property_listing_details_module")/ul/li/span/text()')
     
-    l.add_xpath('public_records'] = hxs.select('id("property_public_info_module")/ul/li/span/text()')
+    l.add_xpath('public_records', 'id("property_public_info_module")/ul/li/span/text()')
     
     return l.load_item()
     
@@ -83,4 +84,4 @@ class TruliaSpider(CrawlSpider):
     
     l.add_value('public_records', 'id("property_public_info_module")/ul/li/span/text()')
     
-    return l.load_item())
+    return l.load_item()
