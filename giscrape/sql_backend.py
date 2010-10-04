@@ -10,28 +10,35 @@ import orm
 log.start()
 
 class SQLBackend(object):
+  
+  def __init__(self):
+    dispatcher.connect(self.engine_started, signal=signals.engine_started)
+    dispatcher.connect(self.engine_stopped, signal=signals.engine_stopped)
+    dispatcher.connect(self.item_passed, signal=signals.item_passed)
+      
+  def engine_started(self):
+    log.msg("opening database connection")
     
-    def __init__(self):
-        dispatcher.connect(self.engine_started, signal=signals.engine_started)
-        dispatcher.connect(self.engine_stopped, signal=signals.engine_stopped)
-        dispatcher.connect(self.item_passed, signal=signals.item_passed)
-        
-    def engine_started(self):
-        log.msg("opening database connection")
-        
-        self.engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
-        self.metadata = orm.metadata
-        self.metadata.create_all(self.engine) 
-        self.Session = sessionmaker(bind=self.engine)
-        
-        mapper(items.RentalItem, orm.rental_table)
-        mapper(items.SaleItem, orm.sale_table)
-        
-    def engine_stopped(self):
-        pass
-        
-    def item_passed(self, item, spider, output):
-        session = self.Session()
-        
-        session.add(output)
-        session.commit()
+    self.engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
+    self.metadata = orm.Base.metadata
+    self.metadata.create_all(self.engine) 
+    self.Session = sessionmaker(bind=self.engine)
+      
+  def engine_stopped(self):
+    pass
+      
+  def item_passed(self, item, spider, output):
+    session = self.Session()
+    
+    try:
+      if( isinstance(output, items.RentalItem) ):
+        obj = orm.Rental(**output )
+      elif( isinstance(output, items.SaleItem) ):
+        obj = orm.Sale( **output )
+      else:
+        raise StandardError, 'unknown data type'
+    except StandardError:
+      pass
+    else:
+      session.add( obj )
+      session.commit()

@@ -7,6 +7,7 @@ from scrapy.contrib.loader import XPathItemLoader
 from giscrape.items import *
 from scrapy.item import Item, Field
 from scrapy import log
+from giscrape.orm import *
 
 log.start()
 
@@ -63,25 +64,25 @@ class TruliaSpider(CrawlSpider):
     l = XPathItemLoader(item=SaleItem(), response=response)
     
     l.add_value('url', response.url)
-    l.add_value('address', '//h1[@class="address"]/text()')
+    l.add_xpath('address', '//h1[@class="address"]/text()')
     
-    l.add_value('price', '//div[@class="price"]/text()[1]', re=r'$(\n+)')
+    l.add_xpath('price', '//div[@class="price"]/text()[1]', re=r'$(\n+)')
 
-    l.add_value('bedrooms', '//th[text()="Bedrooms:"]/../td/text()')
-    l.add_value('bathrooms', '//th[text()="Bathrooms:"]/../td/text()')
-    l.add_value('property_type', '//th[text()="Property type:"]/../td/text()')
-    l.add_value('size', '//th[text()="Size:"]/../td/text()', re=r'\n+')
-    l.add_value('lot', '//th[text()="Lot:"]/../td/text()')
-    l.add_value('price_per_sf', '//th[text()="Price/sqft:"]/../td/text()')
-    l.add_value('year_built', '//th[text()="Year built:"]/../td/text()')
-    l.add_value('date_listed', '//th[text()="Added on Trulia:"]/../td/text()')
-    l.add_value('mls_id', '//th[text()="MLS/ID:"]/../td/text()')
+    l.add_xpath('bedrooms', '//th[text()="Bedrooms:"]/../td/text()')
+    l.add_xpath('bathrooms', '//th[text()="Bathrooms:"]/../td/text()')
+    l.add_xpath('property_type', '//th[text()="Property type:"]/../td/text()')
+    l.add_xpath('size', '//th[text()="Size:"]/../td/text()', re=r'\n+')
+    l.add_xpath('lot', '//th[text()="Lot:"]/../td/text()')
+    l.add_xpath('price_per_sf', '//th[text()="Price/sqft:"]/../td/text()')
+    l.add_xpath('year_built', '//th[text()="Year built:"]/../td/text()')
+    l.add_xpath('date_listed', '//th[text()="Added on Trulia:"]/../td/text()')
+    l.add_xpath('mls_id', '//th[text()="MLS/ID:"]/../td/text()')
     
-    l.add_value('descriptive_title', '//h2[@class="descriptive_title"]/text()')
-    l.add_value('description', '//div[@class="listing_description_module"]/text()')
+    l.add_xpath('descriptive_title', '//h2[@class="descriptive_title"]/text()')
+    l.add_xpath('description', '//div[@class="listing_description_module"]/text()')
     
-    l.add_value('additional_fields', 'id("property_listing_details_module")/ul/li/span/text()')
+    l.add_xpath('additional_fields', 'id("property_listing_details_module")/ul/li/span/text()')
     
-    l.add_value('public_records', 'id("property_public_info_module")/ul/li/span/text()')
-    
+    l.add_xpath('public_records', 'id("property_public_info_module")/ul/li/span/text()')
+
     return l.load_item()

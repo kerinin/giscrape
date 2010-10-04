@@ -1,59 +1,73 @@
 from sqlalchemy import Table, Column, Integer, String, Float, Date, MetaData, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
 
-metadata = MetaData()
+Base = declarative_base()
 
-rental_table = Table('rental', metadata,
-  Column('id', Integer, primary_key=True),
-  Column('url', String, unique=True, index=True),
-  Column('address', String),
+class Rental(Base):
+  __tablename__ = 'rental'
   
-  Column('price', Float, index=True),
-  Column('price_period', String, nullable=True),
-  Column('bedrooms', Integer, nullable=True, index=True),
-  Column('bathrooms', Float, nullable=True, index=True),
-  Column('property_type', String, nullable=True),
-  Column('size', Integer, nullable=True, index=True),
-  Column('lot', String, nullable=True),
-  Column('year_built', Integer, nullable=True, index=True),
-  Column('lease_term', String, nullable=True),
-  Column('pets_allowed', String, nullable=True),
-  Column('date_listed', Date, nullable=True, index=True),
-  Column('mls_id', String, nullable=True),
+  def __init__(self, **props):
+    for key in props.keys():
+      setattr(self, key, props[key])
+      
+  id = Column(Integer, primary_key=True)
+  url = Column(String, unique=True, index=True)
+  address = Column(String)
   
-  Column('descriptive_title', String, nullable=True),
-  Column('description', String, nullable=True),
+  price =         Column(Float, index=True)
+  price_period =  Column(String, nullable=True)
+  bedrooms =      Column(Integer, nullable=True, index=True)
+  bathrooms =     Column(Float, nullable=True, index=True)
+  property_type = Column(String, nullable=True)
+  size =          Column(Integer, nullable=True, index=True)
+  lot =           Column(String, nullable=True)
+  year_built =    Column(Integer, nullable=True, index=True)
+  lease_term =    Column(String, nullable=True)
+  pets_allowed =  Column(String, nullable=True)
+  date_listed =   Column(Date, nullable=True, index=True)
+  mls_id =        Column(String, nullable=True)
   
-  Column('additional_fields', String, nullable=True),
+  descriptive_title = Column(String, nullable=True)
+  description =       Column(String, nullable=True)
   
-  Column('public_records', String, nullable=True)
-  )
+  additional_fields = Column(String, nullable=True)
   
-sale_table = Table('for_sale', metadata,
-  Column('id', Integer, primary_key=True),
-  Column('url', String, unique=True, index=True),
-  Column('address', String),
+  public_records =    Column(String, nullable=True)
   
-  Column('price', Float, index=True),
-  Column('bedrooms', Integer, nullable=True, index=True),
-  Column('bathrooms', Float, nullable=True, index=True),
-  Column('property_type', String, nullable=True),
-  Column('size', Integer, nullable=True, index=True),
-  Column('lot', String, nullable=True),
-  Column('price_per_sf', Float, nullable=True, index=True),
-  Column('year_built', Integer, nullable=True, index=True),
-  Column('date_listed', Date, nullable=True, index=True),
-  Column('mls_id', String, nullable=True),
+class Sale(Base):
+  __tablename__ = 'for_sale'
   
-  Column('descriptive_title', String, nullable=True),
-  Column('description', String, nullable=True),
+  def __init__(self, **props):
+    for key in props.keys():
+      setattr(self, key, props[key])
   
-  Column('additional_fields', String, nullable=True),
+  id = Column(Integer, primary_key=True)
+  url = Column(String, unique=True, index=True)
+  address = Column(String)
   
-  Column('fees', String, nullable=True),
+  price =         Column(Float, index=True)
+  bedrooms =      Column(Integer, nullable=True, index=True)
+  bathrooms =     Column(Float, nullable=True, index=True)
+  property_type = Column(String, nullable=True)
+  size =          Column(Integer, nullable=True, index=True)
+  lot =           Column(String, nullable=True)
+  price_per_sf =  Column(Float, nullable=True, index=True)
+  year_built =    Column(Integer, nullable=True, index=True)
+  date_listed =   Column(Date, nullable=True, index=True)
+  mls_id =        Column(String, nullable=True)
   
-  Column('public_records', String, nullable=True),
-  Column('property_taxes', String, nullable=True),
+  descriptive_title = Column(String, nullable=True)
+  description =       Column(String, nullable=True)
   
-  Column('sale_price', Integer, nullable=True, index=True),
-  Column('sale_date', Date, nullable=True)
-  )
+  additional_fields = Column(String, nullable=True)
+  
+  public_records =    Column(String, nullable=True)
+  
+  fees = Column(String, nullable=True)
+  
+  public_records = Column(String, nullable=True)
+  property_taxes = Column(String, nullable=True)
+  
+  sale_price = Column(Integer, nullable=True, index=True)
+  sale_date = Column(Date, nullable=True)
+  
