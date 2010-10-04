@@ -5,7 +5,15 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor, BaseSgmlLinkEx
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from giscrape.items import *
 from scrapy.item import Item, Field
+from scrapy import log
 
+log.start()
+
+class customExtractor(SgmlLinkExtractor):
+  def extract_links(self, response):
+    response.body = response.body.replace('\\','')
+    return SgmlLinkExtractor.extract_links(self,response)
+    
 class TruliaSpider(CrawlSpider):
   name = 'trulia'
   allowed_domains = ['www.trulia.com']
@@ -17,8 +25,8 @@ class TruliaSpider(CrawlSpider):
   
   rules = (
     Rule( SgmlLinkExtractor(restrict_xpaths='//a[@class="pg_link"]') ),
-    Rule( SgmlLinkExtractor(allow='www.trulia.com/rental'),callback='parse_for_rental' ),
-    Rule( SgmlLinkExtractor(allow='www.trulia.com/property'),callback='parse_for_sale' ),
+    Rule( customExtractor(allow='www.trulia.com/rental'),callback='parse_rental' ),
+    Rule( customExtractor(allow='www.trulia.com/property'),callback='parse_for_sale' ),
   )
         
   def parse_rental(self, response):
