@@ -42,6 +42,7 @@ def sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
 
   X = range(price_min, price_max, step)
   Y = [ session.query(Sale).filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ]
+  C = [ session.query(Sale).filter(Sale.price < x).count() for x in X ]
 
   ax.bar(X,Y, width=step, color='g')
   ax.set_title("Home Availability by Price")
@@ -50,6 +51,12 @@ def sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   ax.grid(True)
   ax.axis([price_min,price_max,None,None])
   ax.xaxis.set_major_formatter(mFormatter)
+  
+  ax2 = ax.twinx()
+  ax2.plot(X,C,'--k')
+  ax2.set_ylabel('Cumulative Units')
+  ax2.axis([price_min,price_max,None,None])
+  ax2.xaxis.set_major_formatter(mFormatter)
   
   if to_show:
     show()
@@ -64,7 +71,8 @@ def rental_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
 
   X = range(price_min, price_max, step)
   Y = [ session.query(Rental).filter(Rental.price >= x).filter(Rental.price < x+step).count() for x in X ]
-  
+  C = [ session.query(Rental).filter(Rental.price < x).count() for x in X ]
+    
   ax.bar(X,Y, width=step, color='g')
   ax.set_title("Rental Availability by Price")
   ax.set_ylabel("Units Available")
@@ -72,6 +80,11 @@ def rental_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   ax.grid(True)
   ax.axis([price_min,price_max,None,None])
 
+  ax2 = ax.twinx()
+  ax2.plot(X,C,'--k')
+  ax2.set_ylabel('Cumulative Units')
+  ax2.axis([price_min,price_max,None,None])
+  
   if to_show:
     show()
 
