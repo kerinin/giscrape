@@ -24,7 +24,7 @@ def init(self, **props):
       by_sf = re.compile(r'([\d|,]+) sqft')
       by_acre = re.compile(r'([\d|,|.]+) acres')
       if by_sf.search(value):
-        self.lot = by_sf.findall(value)[0]
+        self.lot = by_sf.findall(value)[0].replace(',','')
       elif by_acre.search(value):
         self.lot = int( 43560.0 * float( by_acre.findall(value)[0].replace(',','') ) )
     elif key == 'address' and 'Address Not Disclosed' in value:
