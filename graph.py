@@ -16,7 +16,7 @@ import matplotlib.ticker as ticker
 from giscrape import orm
 from giscrape.orm import *
 
-_Functions = ['run','rent_per_sf_distribution','cost_per_sf_distribution','sale_price_distribution','rental_price_distribution']
+_Functions = ['run','median_cost_vs_age','sale_size_distribution','rent_per_sf_distribution','cost_per_sf_distribution','sale_price_distribution','rental_price_distribution']
 	
 engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
 metadata = orm.Base.metadata
@@ -33,7 +33,74 @@ def run():
   
   show()
   
+#histogram array by distance - price/rent/floor area/age
+#building type distribution (house, duplex, apartment, loft, etc)
+#income distribution vs rent/cost distribution
+#time to sell vs asking price
+#time to sell vs size
+#time to sell vs bed & baths
+#median rent ratio by floor area (control for bed/bath? include bars?)
+#median cost vs age (plots for floor size)
+
+def median_cost_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
+  fig.suptitle("Asking Price Distribution by Age", fontsize=18, weight='bold')
+  
+  session = Session()
+  
+  q = session.query(Sale).filter(Sale.year_built != None).filter(Sale.price != None)
+  total = q.count()
+  trim = int( total * .01 )
+  first_date = q.order_by(asc(Sale.year_built))[trim].year_built
+  last_date = q.order_by(desc(Sale.year_built)).first().year_built
+  step = int((last_date - first_date)/12. )
+  
+  def prices(start,end):
+    return [ x.price for x in q.filter('for_sale.year_built >= %s' % start).filter('for_sale.year_built < %s' % end).all() ]
+    
+  X = arange(first_date, last_date, step)
+  Y = [ prices(x,x+step) for x in X ]
+  
+  ax.boxplot(Y, sym='', whis=1.5, positions=X, widths=(.5*step))
+  ax.set_title("Boxes show median and quartiles, lines show inner quartile range")
+  ax.set_ylabel("Asking Price Distribution ($)")
+  ax.set_xlabel("Year Built")
+  ax.grid(True)
+  ax.axis([first_date-(step/2),last_date,None,None])
+  ax.yaxis.set_major_formatter(mFormatter)
+  
+
+  show()  
+
+def sale_size_distribution( ax = fig.add_subplot(1,1,1), to_show = True):
+  fig.suptitle("Home Size Distribution", fontsize=18, weight='bold')
+  
+  session = Session()
+  
+  area_query = session.query(Sale).filter(Sale.size != None)
+  total = area_query.count()
+  trim = int( total * .02 )
+  max_area = area_query.order_by(desc(Sale.size))[trim].size
+  min_area = area_query.order_by(asc(Sale.size)).first().size
+  step = int( (max_area - min_area)/100.0 )
+  
+  X = arange(min_area, max_area, step)
+  Y = [ area_query.filter("for_sale.size >= %s" % str(x)).filter("for_sale.size < %s" % str(x+step)).count() for x in X ]
+  C = [ 100*float(area_query.filter("for_sale.size < %s" % str(x+step)).count())/total for x in X ]
+  
+  ax.bar(X,Y, width=step, color='c',edgecolor='c')
+  
+  ax.set_ylabel("Units Available")
+  ax.set_xlabel("Size (sf)")
+  
+  ax2 = ax.twinx()
+  ax2.plot(X,C,'--k')
+  ax2.set_ylabel('Cumulative Units (%)')
+  ax2.axis([min_area,max_area,None,None])
+  
+  show()
+  
 def rent_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
+  fig.suptitle("Rent/sf Distribution", fontsize=18, weight='bold')
   session = Session()
 
   per_sf_query = session.query(Rental).filter(Rental.price != None).filter(Rental.size != None).order_by(asc(Rental.price / Rental.size))
@@ -52,7 +119,6 @@ def rent_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
     
   ax.bar(X,Y, width=step, color='y')
   
-  ax.set_title("Rent/sf Distribution")
   ax.set_ylabel("Units Available")
   ax.set_xlabel("Monthly Rent / sf ($/sf)")
   
@@ -64,6 +130,7 @@ def rent_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   show()
   
 def cost_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
+  fig.suptitle("Home Price/sf Distribution", fontsize=18, weight='bold')
   session = Session()
 
   per_sf_query = session.query(Sale).filter(Sale.price != None).filter(Sale.size != None).order_by(asc(Sale.price / Sale.size))
@@ -80,7 +147,6 @@ def cost_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   
   ax.bar(X,Y, width=step, color='y')
   
-  ax.set_title("Home Price/sf Distribution")
   ax.set_ylabel("Units Available")
   ax.set_xlabel("Asking Price / sf ($/sf)")
   
@@ -92,6 +158,7 @@ def cost_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   show()
 
 def sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
+  fig.suptitle("Home Availability by Price", fontsize=18, weight='bold')
   session = Session()
     
   trim = int(session.query(Sale).count()/50.0)
@@ -104,7 +171,6 @@ def sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   C = [ session.query(Sale).filter(Sale.price < x).count() for x in X ]
 
   ax.bar(X,Y, width=step, color='g')
-  ax.set_title("Home Availability by Price")
   ax.set_ylabel("Units Available")
   ax.set_xlabel("Asking Price (Million $)")
   ax.grid(True)
@@ -121,6 +187,7 @@ def sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
     show()
   
 def rental_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
+  fig.suptitle("Rental Availability by Price", fontsize=18, weight='bold')
   session = Session()
   
   trim = int(session.query(Rental).count()/50.0)
@@ -133,7 +200,6 @@ def rental_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   C = [ session.query(Rental).filter(Rental.price < x).count() for x in X ]
     
   ax.bar(X,Y, width=step, color='g')
-  ax.set_title("Rental Availability by Price")
   ax.set_ylabel("Units Available")
   ax.set_xlabel("Monthly Rent ($)")
   ax.grid(True)

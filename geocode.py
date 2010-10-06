@@ -20,7 +20,8 @@ metadata = orm.Base.metadata
 metadata.create_all(engine) 
 Session = sessionmaker(bind=engine)
 
-g = geocoders.Google() 
+#g = geocoders.Google() 
+g = geocoders.Yahoo('njjoUkPV34EK.D.t1Ev79ZEFAZtrCdSxDqGdlsNUPVQahXlcWxWTellv1bvHDA--')
 
 def run():
   session = Session()
@@ -36,7 +37,7 @@ def run():
         except GQueryError:
           print "Query Error"
         else:
-          rental.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat)
+          rental.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) )
           print (place,lat,lon)
       print "Saving..."
       session.commit()
@@ -50,7 +51,7 @@ def run():
         except GQueryError:
           print "Query Error"
         else:
-          sale.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat)
+          sale.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) )
           print (place,lat,lon)
       print "Saving..."
       session.commit()   
