@@ -38,6 +38,8 @@ def run():
           print "Query Error"
         else:
           rental.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) )
+          rental.lat = lat
+          rental.lon = lon
           print (place,lat,lon)
       print "Saving..."
       session.commit()
@@ -52,6 +54,8 @@ def run():
           print "Query Error"
         else:
           sale.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) )
+          sale.lat = lat
+          sale.lon = lon
           print (place,lat,lon)
       print "Saving..."
       session.commit()   

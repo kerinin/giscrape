@@ -16,7 +16,7 @@ import matplotlib.ticker as ticker
 from giscrape import orm
 from giscrape.orm import *
 
-_Functions = ['run','median_cost_vs_age','sale_size_distribution','rent_per_sf_distribution','cost_per_sf_distribution','sale_price_distribution','rental_price_distribution']
+_Functions = ['run','recent_median_cost_vs_age','median_cost_vs_age','sale_size_distribution','rent_per_sf_distribution','cost_per_sf_distribution','sale_price_distribution','rental_price_distribution']
 	
 engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
 metadata = orm.Base.metadata
@@ -25,6 +25,7 @@ Session = sessionmaker(bind=engine)
   
 locale.setlocale(locale.LC_ALL)
 mFormatter = ticker.FuncFormatter(lambda x,pos: str(x/1000000.0)+'M' )
+yFormatter = ticker.FuncFormatter(lambda x,pos: "'"+str(x)[-2:] )
 fig = plt.figure()
 
 def run():
@@ -34,14 +35,46 @@ def run():
   show()
   
 #histogram array by distance - price/rent/floor area/age
-#building type distribution (house, duplex, apartment, loft, etc)
 #income distribution vs rent/cost distribution
 #time to sell vs asking price
 #time to sell vs size
 #time to sell vs bed & baths
 #median rent ratio by floor area (control for bed/bath? include bars?)
-#median cost vs age (plots for floor size)
+#floor area vs age
 
+def recent_median_cost_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
+  fig.suptitle("Asking Price Distribution by Age, 1996-2010", fontsize=18, weight='bold')
+  
+  session = Session()
+  
+  q = session.query(Sale).filter(Sale.year_built != None).filter(Sale.price != None).filter(Sale.year_built >= 1995)
+  total = q.count()
+
+  
+  def prices(year):
+    return [ x.price for x in q.filter('for_sale.year_built = %s' % year).all() ]
+    
+  X = arange(1996, 2011, 1)
+  Y = [ prices(x) for x in X ]
+  C = [ len(y) for y in Y ]
+  
+
+  ax.set_title("Boxes show median and quartiles, lines show inner quartile range")   
+  ax.set_xlabel("Year Built")
+  p1=ax.plot(X,C,'--k', alpha=.5, zorder=-1)
+  ax.set_ylabel('Sample Size')
+  
+  ax2 = ax.twinx() 
+  ax2.boxplot(Y, sym='', whis=1.5, positions=X, widths=.5)
+  ax2.set_ylabel("Asking Price Distribution ($)")
+  ax2.grid(True)
+  ax2.yaxis.set_major_formatter(mFormatter)
+  ax2.xaxis.set_major_formatter(yFormatter)
+  ax2.axis([1995,2011,None,None])
+  
+  legend([p1],['Sample Size'], loc=2)
+  show()  
+  
 def median_cost_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
   fig.suptitle("Asking Price Distribution by Age", fontsize=18, weight='bold')
   
@@ -59,16 +92,23 @@ def median_cost_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
     
   X = arange(first_date, last_date, step)
   Y = [ prices(x,x+step) for x in X ]
-  
-  ax.boxplot(Y, sym='', whis=1.5, positions=X, widths=(.5*step))
-  ax.set_title("Boxes show median and quartiles, lines show inner quartile range")
-  ax.set_ylabel("Asking Price Distribution ($)")
-  ax.set_xlabel("Year Built")
-  ax.grid(True)
-  ax.axis([first_date-(step/2),last_date,None,None])
-  ax.yaxis.set_major_formatter(mFormatter)
+  C = [ len(y) for y in Y ]
   
 
+  ax.set_title("Boxes show median and quartiles, lines show inner quartile range")   
+  ax.set_xlabel("Year Built")
+  p1=ax.plot(X,C,'--k', alpha=.5, zorder=-1)
+  ax.set_ylabel('Sample Size')
+  
+  ax2 = ax.twinx() 
+  ax2.boxplot(Y, sym='', whis=1.5, positions=X, widths=(.5*step))
+  ax2.set_ylabel("Asking Price Distribution ($)")
+  ax2.grid(True)
+  ax2.axis([first_date-(step/2),last_date,None,None])
+  ax2.yaxis.set_major_formatter(mFormatter)
+  ax2.xaxis.set_major_formatter(yFormatter)
+  
+  legend([p1],['Sample Size'], loc=2)
   show()  
 
 def sale_size_distribution( ax = fig.add_subplot(1,1,1), to_show = True):
