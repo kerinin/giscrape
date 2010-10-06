@@ -48,7 +48,7 @@ class Rental(Base):
   bathrooms =     Column(Float, nullable=True, index=True)
   powder_rooms =  Column(Integer, nullable=True, index=True) 
   property_type = Column(String, nullable=True)
-  size =          Column(String, nullable=True, index=True)
+  size =          Column(Integer, nullable=True, index=True)
   lot =           Column(Integer, nullable=True)
   year_built =    Column(Integer, nullable=True, index=True)
   lease_term =    Column(String, nullable=True)
