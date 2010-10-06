@@ -1,3 +1,5 @@
+from datetime import * 
+
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals, log
 
@@ -8,9 +10,6 @@ import items
 import orm
 
 log.start()
-
-class Fail(StandardError):
-  pass
   
 class SQLBackend(object):
   
@@ -37,10 +36,11 @@ class SQLBackend(object):
       elif( isinstance(output, items.SaleItem) ):
         obj = orm.Sale( **output )
       else:
-        raise Fail, 'unknown data type'
-    except Fail:
+        raise orm.Fail, 'unknown data type'
+    except orm.Fail:
       log.msg("SQL handling failed")
     else:
+      obj.last_crawl = datetime.now()
       session.add( obj )
       session.commit()
       

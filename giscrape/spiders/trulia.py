@@ -21,7 +21,7 @@ class TruliaSpider(CrawlSpider):
   allowed_domains = ['www.trulia.com']
 
   start_urls = [
-      #"http://www.trulia.com/for_sale/Austin,TX/",
+      "http://www.trulia.com/for_sale/Austin,TX/",
       "http://www.trulia.com/for_rent/Austin,TX/",
   ]
   
@@ -37,7 +37,7 @@ class TruliaSpider(CrawlSpider):
     l.add_value('url', response.url)
     l.add_xpath('address', '//th[text()="Address:"]/../td/text()')
     
-    l.add_xpath('price', '//th[text()="Price:"]/../td/div/text()', re=r'\$([\d|,]+)')
+    l.add_xpath('price', '//th[text()="Price:"]/../td/div/text()')
     l.add_xpath('price_period', '//th[text()="Price:"]/../td/div/span/text()')
     
     l.add_xpath('bedrooms', '//th[text()="Bedrooms:"]/../td/text()')
@@ -67,7 +67,7 @@ class TruliaSpider(CrawlSpider):
     l.add_value('url', response.url)
     l.add_xpath('address', '//h1[@class="address"]/text()')
     
-    l.add_xpath('price', '//div[@class="price"]/text()[1]', re=r'([\d|,]+)')
+    l.add_xpath('price', '//div[@class="price"]/text()')
 
     l.add_xpath('bedrooms', '//th[text()="Bedrooms:"]/../td/text()')
     l.add_xpath('bathrooms', '//th[text()="Bathrooms:"]/../td/text()', re=r'(\d+)')

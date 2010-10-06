@@ -1,7 +1,7 @@
 import re
 from datetime import *
 
-from sqlalchemy import Table, Column, Integer, String, Float, Date, MetaData, ForeignKey
+from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from geoalchemy import *
 
@@ -9,6 +9,9 @@ from formencode import validators
 
 Base = declarative_base()
 
+class Fail(StandardError):
+  pass
+  
 def init(self, **props):
   for key in props.keys():
     value = ( props[key][0] if isinstance( props[key], list ) else props[key] )
@@ -19,8 +22,12 @@ def init(self, **props):
       
     if key == 'date_listed':
       self.date_listed = None if (value == '180+ days ago') else datetime.now() - timedelta( int( re.findall('(\d+) days ago', value)[0] ) )
-    elif key == 'price_per_sf' or key == 'price' or key == 'size':
+    elif key == 'price_per_sf' or key == 'size':
       setattr(self, key, int( value.replace(',','').strip('$') ) )
+    elif key == 'price':
+      if re.search(r'\xe2', value) or value.count(u'\u2013'): raise Fail, "Price span"
+      
+      self.price = re.findall(r'\$([\d|,]+)', value)[0].replace(',','').strip('$')
     elif key == 'lot':
       by_sf = re.compile(r'([\d|,]+) sqft')
       by_acre = re.compile(r'([\d|,|.]+) acres')
@@ -66,7 +73,9 @@ class Rental(Base):
   
   lat = Column(Float, nullable=True, index=True)
   lon = Column(Float, nullable=True, index=True)
-  geom = GeometryColumn(Point(2))
+  geom = GeometryColumn(Point(2), nullable=True)
+  
+  last_crawl = Column(DateTime)
   
 class Sale(Base):
   __tablename__ = 'for_sale'
@@ -107,7 +116,9 @@ class Sale(Base):
   
   lat = Column(Float, nullable=True, index=True)
   lon = Column(Float, nullable=True, index=True)
-  geom = GeometryColumn(Point(2))
+  geom = GeometryColumn(Point(2), nullable=True)
+  
+  last_crawl = Column(DateTime)
   
 GeometryDDL(Rental.__table__)
 GeometryDDL(Sale.__table__)
