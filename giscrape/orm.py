@@ -35,6 +35,8 @@ def init(self, **props):
         self.lot = by_sf.findall(value)[0].replace(',','')
       elif by_acre.search(value):
         self.lot = int( 43560.0 * float( by_acre.findall(value)[0].replace(',','') ) )
+		elif key == 'sale_date':
+			self.sale_date = datetime.strptime(value.replace('st','').replace('nd','').replace('rd','').replace('th',''),'%b %d, %Y')
     elif key == 'address' and 'Address Not Disclosed' in value:
       pass
     else:
@@ -120,5 +122,39 @@ class Sale(Base):
   
   last_crawl = Column(DateTime)
   
+class Sold(Base):
+  __tablename__ = 'sold'
+
+  def __init__(self, **props):
+    init(self,**props)
+
+  id = Column(Integer, primary_key=True)
+  url = Column(String, index=True)
+  address = Column(String)
+
+  price =         Column(Float, index=True)
+  bedrooms =      Column(Integer, nullable=True, index=True)
+  bathrooms =     Column(Integer, nullable=True, index=True) 
+  powder_rooms =  Column(Integer, nullable=True, index=True) 
+  property_type = Column(String, nullable=True)
+  size =          Column(Integer, nullable=True, index=True)
+  lot =           Column(Integer, nullable=True)
+  price_per_sf =  Column(Float, nullable=True, index=True)
+  year_built =    Column(Integer, nullable=True, index=True)
+
+  public_records =    Column(String, nullable=True)
+
+  fees = Column(String, nullable=True)
+
+  public_records = Column(String, nullable=True)
+
+  sale_date = Column(Date, nullable=True)
+
+  lat = Column(Float, nullable=True, index=True)
+  lon = Column(Float, nullable=True, index=True)
+  geom = GeometryColumn(Point(2), nullable=True)
+
+  last_crawl = Column(DateTime)
+	
 GeometryDDL(Rental.__table__)
 GeometryDDL(Sale.__table__)

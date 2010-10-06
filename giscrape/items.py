@@ -5,34 +5,24 @@
 
 from scrapy.item import Item, Field
 
-class RentalItem(Item):
-  # define the fields for your item here like:
-  # name = Field()
+class SoldItem(Item):
   url = Field()
   address = Field()
-  
+
   price = Field()
-  price_period = Field()
   bedrooms = Field()
   bathrooms = Field()
   powder_rooms = Field()
   property_type = Field()
   size = Field()
   lot = Field()
+  price_per_sf = Field()
   year_built = Field()
-  lease_term = Field()
-  pets_allowed = Field()
-  date_listed = Field()
-  mls_id = Field()
-  
-  descriptive_title = Field()
-  description = Field()
-  
-  additional_fields = Field()
-  
+
   public_records = Field()
-    
-    
+
+  sale_date = Field()
+
 class SaleItem(Item):
   url = Field()
   address = Field()
