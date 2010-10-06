@@ -3,6 +3,7 @@ from datetime import *
 
 from sqlalchemy import Table, Column, Integer, String, Float, Date, MetaData, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from geoalchemy import *
 
 from formencode import validators
 
@@ -63,6 +64,10 @@ class Rental(Base):
   
   public_records =    Column(String, nullable=True)
   
+  lat = Column(Float, nullable=True, index=True)
+  lon = Column(Float, nullable=True, index=True)
+  geom = GeometryColumn(Point(2))
+  
 class Sale(Base):
   __tablename__ = 'for_sale'
   
@@ -100,3 +105,9 @@ class Sale(Base):
   sale_price = Column(Integer, nullable=True, index=True)
   sale_date = Column(Date, nullable=True)
   
+  lat = Column(Float, nullable=True, index=True)
+  lon = Column(Float, nullable=True, index=True)
+  geom = GeometryColumn(Point(2))
+  
+GeometryDDL(Rental.__table__)
+GeometryDDL(Sale.__table__)
