@@ -6,6 +6,7 @@ import locale
 from sqlalchemy import create_engine
 from sqlalchemy.orm import mapper, sessionmaker
 from sqlalchemy.sql.expression import *
+import geoalchemy
 from geoalchemy import *
 
 from numpy import *
@@ -13,12 +14,14 @@ from pylab import *
 from matplotlib.ticker import *
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from unum.units import *
 
 from giscrape import orm
 from giscrape.orm import *
 
 _Functions = [
   'run',
+  'cost_vs_distance',
   'size_vs_age',
   'new_sale_size_distribution',
   'new_cost_per_sf_distribution',
@@ -57,7 +60,6 @@ def run():
 
 def cost_vs_distance():
   shady = WKTSpatialElement("POINT(%s %s)" % (30.250421899999999, -97.699009500000003) )
-  radii = [.25, 1, 10]
   session = Session()
   q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None)
   
@@ -68,29 +70,37 @@ def cost_vs_distance():
   
   X = range(price_min, price_max, step)
   
+  # radius in miles
+  radii = [.1125, 1000] * mile
   for i, radius in enumerate(radii):
-    ax = fig.add_subplot(len(radii),1,i)
     
-    context = q.filter(Sale.geom.distance(shady) < radius)
-
+    ax = fig.add_subplot(2,1,i+1)
+    
+    context = q.filter(Sale.geom.distance(shady) < radius.asNumber(m) )
+    
     Y = array( [ context.filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ], dtype=float )
     C = array( [ context.filter(Sale.price < x).count() for x in X ], dtype=float )
     
     ax.bar(X,100*Y / session.query(Sale).filter(Sale.year_built >= 2009).count(), width=step, color='g', edgecolor='g')
 
-    ax.grid(True)
-    
-    #ax2 = ax.twinx()
-    #ax2.plot(X,100*C / session.query(Sale).count(),'k', lw=2)
 
-  fig.axis([price_min,price_max,None,None])
-  fig.xaxis.set_major_formatter(mFormatter)
-  fig.axis([price_min,price_max,0,None])
-  fig.set_ylabel("Units Available (%)")
-  fig.set_xlabel("Asking Price (Million $)")
+    ax.axis([price_min,price_max,0,None])
+
+    ax.grid(True)
+        
+  #ax2 = ax.twinx()
+  #ax2.plot(X,100*C / session.query(Sale).count(),'k', lw=2)
+
+  #fig.axis([price_min,price_max,None,None])
+  #fig.xaxis.set_major_formatter(mFormatter)
+  #fig.axis([price_min,price_max,0,None])
+  #fig.set_ylabel("Units Available (%)")
+  #fig.set_xlabel("Asking Price (Million $)")
     
+  q = session.query(Sale).filter(Sale.geom != None)
+  print q[0].geom.distance(q[1])
+      
   show()
-    
 
 def size_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
   fig.suptitle("Size Distribution by Age", fontsize=18, weight='bold')

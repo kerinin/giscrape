@@ -3,11 +3,15 @@ from datetime import *
 
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from geoalchemy import *
 
 from formencode import validators
 
-Base = declarative_base()
+engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
+metadata = MetaData(engine)
+Base = declarative_base(metadata=metadata)
+Session = sessionmaker(bind=engine)
 
 class Fail(StandardError):
   pass

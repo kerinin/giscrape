@@ -3,9 +3,6 @@ from datetime import *
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals, log
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import mapper, sessionmaker
-
 import items
 import orm
 
@@ -19,16 +16,13 @@ class SQLBackend(object):
     dispatcher.connect(self.item_passed, signal=signals.item_passed)
       
   def engine_started(self):
-    self.engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
-    self.metadata = orm.Base.metadata
-    self.metadata.create_all(self.engine) 
-    self.Session = sessionmaker(bind=self.engine)
+    orm.metadata.create_all(self.engine) 
       
   def engine_stopped(self):
     pass
       
   def item_passed(self, item, spider, output):
-    session = self.Session()
+    session = orm.Session()
     
     try:
       if( isinstance(output, items.RentalItem) ):
