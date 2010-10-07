@@ -6,6 +6,7 @@ import locale
 from sqlalchemy import create_engine
 from sqlalchemy.orm import mapper, sessionmaker
 from sqlalchemy.sql.expression import *
+from geoalchemy import *
 
 from numpy import *
 from pylab import *
@@ -54,6 +55,42 @@ def run():
 #median rent ratio by floor area (control for bed/bath? include bars?)
 #floor area vs age
 
+def cost_vs_distance():
+  shady = WKTSpatialElement("POINT(%s %s)" % (30.250421899999999, -97.699009500000003) )
+  radii = [.25, 1, 10]
+  session = Session()
+  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None)
+  
+  trim = int(q.count()/50.0)
+  price_max = int( q.order_by(-Sale.price)[trim].price )
+  price_min = int( q.order_by(Sale.price).first().price )
+  step = int( (price_max-price_min)/10.0 )
+  
+  X = range(price_min, price_max, step)
+  
+  for i, radius in enumerate(radii):
+    ax = fig.add_subplot(len(radii),1,i)
+    
+    context = q.filter(Sale.geom.distance(shady) < radius)
+
+    Y = array( [ context.filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ], dtype=float )
+    C = array( [ context.filter(Sale.price < x).count() for x in X ], dtype=float )
+    
+    ax.bar(X,100*Y / session.query(Sale).filter(Sale.year_built >= 2009).count(), width=step, color='g', edgecolor='g')
+
+    ax.grid(True)
+    
+    #ax2 = ax.twinx()
+    #ax2.plot(X,100*C / session.query(Sale).count(),'k', lw=2)
+
+  fig.axis([price_min,price_max,None,None])
+  fig.xaxis.set_major_formatter(mFormatter)
+  fig.axis([price_min,price_max,0,None])
+  fig.set_ylabel("Units Available (%)")
+  fig.set_xlabel("Asking Price (Million $)")
+    
+  show()
+    
 
 def size_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
   fig.suptitle("Size Distribution by Age", fontsize=18, weight='bold')
@@ -196,8 +233,8 @@ def new_sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
     line.set_alpha(0)
   
   ax2 = ax.twinx()
-  ax2.plot(X,100*C / session.query(Sale).count(),'k', lw=2)
-  ax2.plot(X,100*nC / session.query(Sale).filter(Sale.year_built >= 2009).count(),'k', alpha = .3, lw=2)
+  ax2.plot(X,100*C / session.query(Sale).count(),'k', alpha = .3, lw=2)
+  ax2.plot(X,100*nC / session.query(Sale).filter(Sale.year_built >= 2009).count(),'k', lw=2)
   ax2.set_ylabel('Cumulative Units (%)')
   ax2.axis([price_min,price_max,0,100])
   ax2.xaxis.set_major_formatter(mFormatter)
