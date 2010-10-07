@@ -21,7 +21,8 @@ metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
 #g = geocoders.Google() 
-g = geocoders.Yahoo('njjoUkPV34EK.D.t1Ev79ZEFAZtrCdSxDqGdlsNUPVQahXlcWxWTellv1bvHDA--')
+#g = geocoders.Yahoo('njjoUkPV34EK.D.t1Ev79ZEFAZtrCdSxDqGdlsNUPVQahXlcWxWTellv1bvHDA--')
+g = geocoders.GeocoderDotUS()  
 
 def run():
   session = Session()

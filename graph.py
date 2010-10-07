@@ -16,7 +16,18 @@ import matplotlib.ticker as ticker
 from giscrape import orm
 from giscrape.orm import *
 
-_Functions = ['run','recent_median_cost_vs_age','median_cost_vs_age','sale_size_distribution','rent_per_sf_distribution','cost_per_sf_distribution','sale_price_distribution','rental_price_distribution']
+_Functions = [
+  'run',
+  'new_sale_size_distribution',
+  'new_cost_per_sf_distribution',
+  'new_sale_price_distribution',
+  'recent_median_cost_vs_age',
+  'median_cost_vs_age',
+  'sale_size_distribution',
+  'rent_per_sf_distribution',
+  'cost_per_sf_distribution',
+  'sale_price_distribution',
+  'rental_price_distribution']
 	
 engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
 metadata = orm.Base.metadata
@@ -42,6 +53,112 @@ def run():
 #median rent ratio by floor area (control for bed/bath? include bars?)
 #floor area vs age
 
+
+
+def new_sale_size_distribution( ax = fig.add_subplot(1,1,1), to_show = True):
+  fig.suptitle("New Home Size Distribution", fontsize=18, weight='bold')
+  
+  session = Session()
+  
+  area_query = session.query(Sale).filter(Sale.size != None)
+  total = area_query.count()
+  trim = int( total * .02 )
+  max_area = area_query.order_by(desc(Sale.size))[trim].size
+  min_area = area_query.order_by(asc(Sale.size)).first().size
+  step = int( (max_area - min_area)/100.0 )
+  
+  X = arange(min_area, max_area, step)
+  Y = array( [ area_query.filter("for_sale.size >= %s" % str(x)).filter("for_sale.size < %s" % str(x+step)).count() for x in X ], dtype=float )
+  C = array( [ area_query.filter("for_sale.size < %s" % x).count() for x in X], dtype = float )
+  nY = array( [ area_query.filter("for_sale.size >= %s" % str(x)).filter("for_sale.size < %s" % str(x+step)).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float )
+  nC = array( [ area_query.filter("for_sale.size < %s" % x).filter(Sale.year_built >= 2009).count() for x in X], dtype = float )
+  
+  ax.bar(X,100*nY/area_query.filter(Sale.year_built >= 2009).count(), width=step, color='c',edgecolor='c')
+  ax.bar(X,100*Y/area_query.count(), width=step, color='k', linewidth=0, alpha=.3)
+      
+  ax.set_ylabel("Units Available (%)")
+  ax.set_xlabel("Size (sf)")
+  ax.axis([min_area,max_area,0,None])
+  
+  ax2 = ax.twinx()
+  ax2.plot(X,100*C/area_query.count(),'--k', alpha=.3)
+  ax2.plot(X,100*nC/area_query.filter(Sale.year_built >= 2009).count(),'--k')
+  ax2.set_ylabel('Cumulative Units (%)')
+  ax2.axis([min_area,max_area,0,100])
+  
+  ax.set_title("(All shown in grey)")
+  show()
+  
+def new_cost_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
+  fig.suptitle("New Home Price/sf Distribution", fontsize=18, weight='bold')
+  session = Session()
+
+  per_sf_query = session.query(Sale).filter(Sale.price != None).filter(Sale.size != None).order_by(asc(Sale.price / Sale.size))
+  trim = int( per_sf_query.count() * .01 )
+  per_sf_min = int( per_sf_query.first().price / per_sf_query.first().size )
+  per_sf_query = session.query(Sale).filter(Sale.price != None).filter(Sale.size != None).order_by(desc(Sale.price / Sale.size))
+  per_sf_max = int( per_sf_query[trim].price / per_sf_query[trim].size )
+
+  step = int( (per_sf_max-per_sf_min)/100.0 )
+
+  X = arange(per_sf_min, per_sf_max, step)
+  Y = array( [ per_sf_query.filter("for_sale.price / for_sale.size >= %s" % x).filter("for_sale.price / for_sale.size < %s" % (x + step)).count() for x in X ], dtype=float)
+  nY = array( [ per_sf_query.filter("for_sale.price / for_sale.size >= %s" % x).filter("for_sale.price / for_sale.size < %s" % (x + step)).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float)
+  C = array( [ per_sf_query.filter("for_sale.price / for_sale.size < %s" % (x + step)).count() for x in X ], dtype=float)
+  nC = array( [ per_sf_query.filter("for_sale.price / for_sale.size < %s" % (x + step)).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float)
+  
+  ax.bar(X,100 * nY / per_sf_query.filter(Sale.year_built >= 2009).count(), width=step, color='y', edgecolor='y')
+  ax.bar(X,100 * Y / per_sf_query.count(), width=step, color='k', linewidth=0, alpha=.3)
+   
+  ax.set_ylabel("Units Available (%)")
+  ax.set_xlabel("Asking Price / sf ($/sf)")
+  ax.axis([per_sf_min,per_sf_max,0,None])
+  
+  ax2 = ax.twinx()
+  ax2.plot(X,100*C/per_sf_query.count(),'--k', alpha=.3)
+  ax2.plot(X,100*nC/per_sf_query.filter(Sale.year_built >= 2009).count(),'--k')
+  ax2.set_ylabel('Cumulative Units (%)')
+  ax2.axis([per_sf_min,per_sf_max,0,100])
+    
+  ax.set_title("(All shown in grey)")
+  show()
+  
+def new_sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
+  fig.suptitle("New Home Availability by Price", fontsize=18, weight='bold')
+  session = Session()
+    
+  trim = int(session.query(Sale).count()/50.0)
+  price_max = int( session.query(Sale).filter(Sale.price != None).order_by(-Sale.price)[trim].price )
+  price_min = int( session.query(Sale).filter(Sale.price != None).order_by(Sale.price)[trim].price )
+  step = int( (price_max-price_min)/100.0 )
+
+  X = range(price_min, price_max, step)
+  Y = array( [ session.query(Sale).filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ], dtype=float )
+  nY = array( [session.query(Sale).filter(Sale.price >= x).filter(Sale.price < x+step).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float )
+  C = array( [ session.query(Sale).filter(Sale.price < x).count() for x in X ], dtype=float )
+  nC = array([ session.query(Sale).filter(Sale.price < x).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float )
+  
+  first=ax.bar(X,100*nY / session.query(Sale).filter(Sale.year_built >= 2009).count(), width=step, color='g', edgecolor='g')
+  
+  second=ax.bar(X,100*Y / session.query(Sale).count(), width=step, color='k', linewidth=0, alpha=.3)
+  ax.set_ylabel("Units Available (%)")
+  ax.set_xlabel("Asking Price (Million $)")
+  ax.grid(True)
+  ax.axis([price_min,price_max,None,None])
+  ax.xaxis.set_major_formatter(mFormatter)
+  ax.axis([price_min,price_max,0,None])
+  
+  ax2 = ax.twinx()
+  ax2.plot(X,100*C / session.query(Sale).count(),'--k')
+  ax2.plot(X,100*nC / session.query(Sale).filter(Sale.year_built >= 2009).count(),'--k', alpha = .3)
+  ax2.set_ylabel('Cumulative Units (%)')
+  ax2.axis([price_min,price_max,0,100])
+  ax2.xaxis.set_major_formatter(mFormatter)
+
+  ax.set_title("(All shown in grey)")
+  if to_show:
+    show()
+    
 def recent_median_cost_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
   fig.suptitle("Asking Price Distribution by Age, 1996-2010", fontsize=18, weight='bold')
   

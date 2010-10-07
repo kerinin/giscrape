@@ -35,8 +35,8 @@ def init(self, **props):
         self.lot = by_sf.findall(value)[0].replace(',','')
       elif by_acre.search(value):
         self.lot = int( 43560.0 * float( by_acre.findall(value)[0].replace(',','') ) )
-		elif key == 'sale_date':
-			self.sale_date = datetime.strptime(value.replace('st','').replace('nd','').replace('rd','').replace('th',''),'%b %d, %Y')
+    elif key == 'sale_date':
+      self.sale_date = datetime.strptime(value.replace('st','').replace('nd','').replace('rd','').replace('th',''),'%b %d, %Y')
     elif key == 'address' and 'Address Not Disclosed' in value:
       pass
     else:
