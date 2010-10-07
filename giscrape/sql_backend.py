@@ -35,8 +35,8 @@ class SQLBackend(object):
         obj = orm.Rental(**output )
       elif( isinstance(output, items.SaleItem) ):
         obj = orm.Sale( **output )
-			elif( isinstance(output, items.SoldItem) ):
-				obj = orm.Sold( **output )
+      elif( isinstance(output, items.SoldItem) ):
+        obj = orm.Sold( **output )
       else:
         raise orm.Fail, 'unknown data type'
     except orm.Fail:

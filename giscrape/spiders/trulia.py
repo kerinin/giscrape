@@ -21,8 +21,8 @@ class TruliaSpider(CrawlSpider):
   allowed_domains = ['www.trulia.com']
 
   start_urls = [
-      #"http://www.trulia.com/for_sale/Austin,TX/",
-      #"http://www.trulia.com/for_rent/Austin,TX/",
+      "http://www.trulia.com/for_sale/Austin,TX/",
+      "http://www.trulia.com/for_rent/Austin,TX/",
 			"http://www.trulia.com/sold/Austin,TX/",
   ]
   
@@ -30,17 +30,17 @@ class TruliaSpider(CrawlSpider):
     Rule( SgmlLinkExtractor(restrict_xpaths='//a[@class="pg_link"]') ),
     Rule( customExtractor(allow='www.trulia.com/rental'),callback='parse_rental' ),
     Rule( customExtractor(allow='www.trulia.com/property'),callback='parse_for_sale' ),
-		Rule( customExtractor(allow='www.trulia.com/sale'),callback='parse_sold' ),
+		Rule( customExtractor(allow='http://www.trulia.com/homes/Texas/Austin/sold'),callback='parse_sold' ),
   )
   
   def parse_sold(self, response):
     l = XPathItemLoader(item=SoldItem(), response=response)
-    
+
     l.add_value('url', response.url)
     l.add_xpath('address', '//h1[@class="address"]/text()')
-    
+
     l.add_xpath('price', '//div[@class="price"]/text()')
-		l.add_xpath('sale_date', '//th[text()="Last sale:"]/../td/div[last()]/text()', re=r'on (\w+)')
+    l.add_xpath('sale_date', '//th[text()="Last sale:"]/../td/div[last()]/text()', re=r'on (\w+)')
 
     l.add_xpath('bedrooms', '//th[text()="Bedrooms:"]/../td/text()')
     l.add_xpath('bathrooms', '//th[text()="Bathrooms:"]/../td/text()', re=r'(\d+)')
@@ -50,7 +50,7 @@ class TruliaSpider(CrawlSpider):
     l.add_xpath('lot', '//th[text()="Lot:"]/../td/text()')
     l.add_xpath('price_per_sf', '//th[text()="Price/sqft:"]/../td/text()')
     l.add_xpath('year_built', '//th[text()="Year built:"]/../td/text()')
-    
+
     l.add_xpath('public_records', 'id("property_public_info_module")/ul/li/span/text()')
 
     return l.load_item()
