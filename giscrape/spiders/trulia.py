@@ -21,8 +21,8 @@ class TruliaSpider(CrawlSpider):
   allowed_domains = ['www.trulia.com']
 
   start_urls = [
-      "http://www.trulia.com/for_sale/Austin,TX/",
-      "http://www.trulia.com/for_rent/Austin,TX/",
+      #"http://www.trulia.com/for_sale/Austin,TX/",
+      #"http://www.trulia.com/for_rent/Austin,TX/",
 			"http://www.trulia.com/sold/Austin,TX/",
   ]
   

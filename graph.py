@@ -18,6 +18,7 @@ from giscrape.orm import *
 
 _Functions = [
   'run',
+  'size_vs_age',
   'new_sale_size_distribution',
   'new_cost_per_sf_distribution',
   'new_sale_price_distribution',
@@ -54,6 +55,41 @@ def run():
 #floor area vs age
 
 
+def size_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
+  fig.suptitle("Size Distribution by Age", fontsize=18, weight='bold')
+  
+  session = Session()
+  
+  q = session.query(Sale).filter(Sale.year_built != None).filter(Sale.size != None)
+  total = q.count()
+  trim = int( total * .01 )
+  first_date = q.order_by(asc(Sale.year_built))[trim].year_built
+  last_date = q.order_by(desc(Sale.year_built)).first().year_built
+  step = int((last_date - first_date)/12. )
+  
+  def sizes(start,end):
+    return [ x.size for x in q.filter('for_sale.year_built >= %s' % start).filter('for_sale.year_built < %s' % end).all() ]
+    
+  X = arange(first_date, last_date, step)
+  Y = [ sizes(x,x+step) for x in X ]
+  C = [ len(y) for y in Y ]
+  
+
+  ax.set_title("Boxes show median and quartiles, lines show inner quartile range")   
+  ax.set_xlabel("Year Built")
+  p1=ax.plot(X,C,'--k', alpha=.5, zorder=-1)
+  ax.set_ylabel('Sample Size')
+  
+  ax2 = ax.twinx() 
+  ax2.boxplot(Y, sym='', whis=1.5, positions=X, widths=(.5*step))
+  ax2.set_ylabel("Size Distribution (sf)")
+  ax2.grid(True)
+  ax2.axis([first_date-(step/2),last_date,None,None])
+  #ax2.yaxis.set_major_formatter(mFormatter)
+  ax2.xaxis.set_major_formatter(yFormatter)
+  
+  legend([p1],['Sample Size'], loc=2)
+  show()  
 
 def new_sale_size_distribution( ax = fig.add_subplot(1,1,1), to_show = True):
   fig.suptitle("New Home Size Distribution", fontsize=18, weight='bold')
@@ -75,16 +111,21 @@ def new_sale_size_distribution( ax = fig.add_subplot(1,1,1), to_show = True):
   
   ax.bar(X,100*nY/area_query.filter(Sale.year_built >= 2009).count(), width=step, color='c',edgecolor='c')
   ax.bar(X,100*Y/area_query.count(), width=step, color='k', linewidth=0, alpha=.3)
-      
   ax.set_ylabel("Units Available (%)")
   ax.set_xlabel("Size (sf)")
   ax.axis([min_area,max_area,0,None])
-  
+  ax.grid(True)
+  for line in ax.get_ygridlines():
+    line.set_alpha(0)
+      
   ax2 = ax.twinx()
-  ax2.plot(X,100*C/area_query.count(),'--k', alpha=.3)
-  ax2.plot(X,100*nC/area_query.filter(Sale.year_built >= 2009).count(),'--k')
+  ax2.plot(X,100*C/area_query.count(),'k', alpha=.3, lw=2)
+  ax2.plot(X,100*nC/area_query.filter(Sale.year_built >= 2009).count(),'k', lw=2)
   ax2.set_ylabel('Cumulative Units (%)')
   ax2.axis([min_area,max_area,0,100])
+  ax2.set_yticks(np.arange(0,101,10))
+  ax.set_xticks(np.arange(0,max_area,500))
+  ax2.grid(True)
   
   ax.set_title("(All shown in grey)")
   show()
@@ -109,16 +150,21 @@ def new_cost_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   
   ax.bar(X,100 * nY / per_sf_query.filter(Sale.year_built >= 2009).count(), width=step, color='y', edgecolor='y')
   ax.bar(X,100 * Y / per_sf_query.count(), width=step, color='k', linewidth=0, alpha=.3)
-   
   ax.set_ylabel("Units Available (%)")
   ax.set_xlabel("Asking Price / sf ($/sf)")
   ax.axis([per_sf_min,per_sf_max,0,None])
-  
+  ax.grid(True)
+  for line in ax.get_ygridlines():
+    line.set_alpha(0)
+     
   ax2 = ax.twinx()
-  ax2.plot(X,100*C/per_sf_query.count(),'--k', alpha=.3)
-  ax2.plot(X,100*nC/per_sf_query.filter(Sale.year_built >= 2009).count(),'--k')
+  ax2.plot(X,100*C/per_sf_query.count(),'k', alpha=.3, lw=2)
+  ax2.plot(X,100*nC/per_sf_query.filter(Sale.year_built >= 2009).count(),'k', lw=2)
   ax2.set_ylabel('Cumulative Units (%)')
   ax2.axis([per_sf_min,per_sf_max,0,100])
+  ax2.set_yticks(np.arange(0,101,10))
+  ax.set_xticks(np.arange(0,per_sf_max,50))
+  ax2.grid(True)
     
   ax.set_title("(All shown in grey)")
   show()
@@ -138,23 +184,27 @@ def new_sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   C = array( [ session.query(Sale).filter(Sale.price < x).count() for x in X ], dtype=float )
   nC = array([ session.query(Sale).filter(Sale.price < x).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float )
   
-  first=ax.bar(X,100*nY / session.query(Sale).filter(Sale.year_built >= 2009).count(), width=step, color='g', edgecolor='g')
-  
-  second=ax.bar(X,100*Y / session.query(Sale).count(), width=step, color='k', linewidth=0, alpha=.3)
+  ax.bar(X,100*nY / session.query(Sale).filter(Sale.year_built >= 2009).count(), width=step, color='g', edgecolor='g')
+  ax.bar(X,100*Y / session.query(Sale).count(), width=step, color='k', linewidth=0, alpha=.3)
   ax.set_ylabel("Units Available (%)")
   ax.set_xlabel("Asking Price (Million $)")
-  ax.grid(True)
   ax.axis([price_min,price_max,None,None])
   ax.xaxis.set_major_formatter(mFormatter)
   ax.axis([price_min,price_max,0,None])
+  ax.grid(True)
+  for line in ax.get_ygridlines():
+    line.set_alpha(0)
   
   ax2 = ax.twinx()
-  ax2.plot(X,100*C / session.query(Sale).count(),'--k')
-  ax2.plot(X,100*nC / session.query(Sale).filter(Sale.year_built >= 2009).count(),'--k', alpha = .3)
+  ax2.plot(X,100*C / session.query(Sale).count(),'k', lw=2)
+  ax2.plot(X,100*nC / session.query(Sale).filter(Sale.year_built >= 2009).count(),'k', alpha = .3, lw=2)
   ax2.set_ylabel('Cumulative Units (%)')
   ax2.axis([price_min,price_max,0,100])
   ax2.xaxis.set_major_formatter(mFormatter)
-
+  ax2.set_yticks(np.arange(0,101,10))
+  ax.set_xticks(np.arange(0,price_max,250000))
+  ax2.grid(True)
+  
   ax.set_title("(All shown in grey)")
   if to_show:
     show()
