@@ -51,6 +51,9 @@ class Rental(Base):
     
   def __init__(self, **props):
     init(self,**props)
+
+	def update(self, **props):
+		init(self,**props)
         
   id = Column(Integer, primary_key=True)
   url = Column(String, index=True)
@@ -88,6 +91,9 @@ class Sale(Base):
   
   def __init__(self, **props):
     init(self,**props)
+
+	def update(self, **props):
+		init(self,**props)
     
   id = Column(Integer, primary_key=True)
   url = Column(String, index=True)
@@ -132,6 +138,9 @@ class Sold(Base):
   def __init__(self, **props):
     init(self,**props)
 
+	def update(self, **props):
+		init(self,**props)
+			
   id = Column(Integer, primary_key=True)
   url = Column(String, index=True)
   address = Column(String)

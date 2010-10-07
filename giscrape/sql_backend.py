@@ -3,11 +3,22 @@ from datetime import *
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals, log
 
+import sqlalchemy
+
 import items
 import orm
 
 log.start()
-  
+session = orm.Session()
+
+def upsert(model,values):
+	try:
+		obj = session.query(model).find(model.url == values['url'])
+		obj.update(**values)
+	except sqlalchemy.orm.exc.NoResultFound:
+		obj = model(**values)
+	return obj
+	
 class SQLBackend(object):
   
   def __init__(self):
@@ -22,15 +33,13 @@ class SQLBackend(object):
     pass
       
   def item_passed(self, item, spider, output):
-    session = orm.Session()
-    
     try:
       if( isinstance(output, items.RentalItem) ):
-        obj = orm.Rental(**output )
+        obj = upsert(orm.Rental, output )
       elif( isinstance(output, items.SaleItem) ):
-        obj = orm.Sale( **output )
+        obj = upsert(orm.Sale, output )
       elif( isinstance(output, items.SoldItem) ):
-        obj = orm.Sold( **output )
+        obj = upsert(orm.Sold, output )
       else:
         raise orm.Fail, 'unknown data type'
     except orm.Fail:
