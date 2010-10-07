@@ -71,7 +71,7 @@ def cost_vs_distance():
   X = range(price_min, price_max, step)
   
   # radius in miles
-  radii = [.1125, 1000] * mile
+  radii = [.5, 1000] * mile
   for i, radius in enumerate(radii):
     
     ax = fig.add_subplot(2,1,i+1)
@@ -99,7 +99,7 @@ def cost_vs_distance():
     
   q = session.query(Sale).filter(Sale.geom != None)
   print q[0].geom.distance(q[1])
-      
+
   show()
 
 def size_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
