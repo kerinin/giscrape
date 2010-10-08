@@ -21,6 +21,8 @@ from giscrape.orm import *
 
 _Functions = [
   'run',
+  'cost_per_sf_vs_distance',
+  'cost_per_sf_vs_distance_scatter',
   'cost_vs_distance_scatter',
   'cost_vs_distance',
   'size_vs_age',
@@ -59,6 +61,61 @@ def run():
 #median rent ratio by floor area (control for bed/bath? include bars?)
 #floor area vs age
 
+
+def cost_per_sf_vs_distance_scatter():
+  fig.suptitle("Cost/sf vs Distance", fontsize=18, weight='bold')
+  shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
+  session = Session()
+  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.size != None).filter(Sale.price != None).filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(Sale.price/Sale.size)
+  
+  X = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in q[:-5] ]
+  Y = [ x.price / x.size for x in q[:-5] ]
+  
+  ax = plt.subplot(111)
+  ax.plot(X,Y,'og')
+  ax.grid(True)
+  ax.set_ylabel("Asking Price / SF ($/sf)")
+  ax.set_xlabel("Distance from Site (miles)")
+  
+  show()
+  
+def cost_per_sf_vs_distance():
+  fig.suptitle("Cost/SF Distribution by Distance", fontsize=18, weight='bold')
+  shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
+  session = Session()
+  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None).filter(Sale.size != None)
+  
+  trim = int(q.count()/50.0)
+  vmax = int( q.order_by(-Sale.price/Sale.size)[trim].price / q.order_by(-Sale.price/Sale.size)[trim].size)
+  vmin = int( q.order_by(Sale.price/Sale.size).first().price / q.order_by(Sale.price/Sale.size).first().size )
+  step = int( (vmax-vmin)/30.0 )
+  
+  X = arange(vmin, vmax, step)
+  
+  # radius in miles
+  radii = [1.0,1.5,2.5,5,10] * mile
+  for i, radius in enumerate(radii):
+    
+    ax = plt.subplot(len(radii),1,i+1)
+    
+    context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
+  
+    Y = array( [ context.filter("for_sale.price / for_sale.size >= %s" % x).filter("for_sale.price / for_sale.size < %s" % (x + step)).count() for x in X ], dtype=float)
+    
+    ax.bar(X,Y, width=step, color='g', edgecolor='g')
+
+    ax.axis([vmin,vmax,0,None])
+    ax.set_ylabel("< %s mi" % radius.asNumber(mile), rotation=0)
+    
+    if not i+1 == len(radii):
+      ax.xaxis.set_major_formatter(NullFormatter())
+    else:
+      ax.set_xlabel('Asking Price / SF ($/sf)')
+    
+    ax.grid(True)
+
+  show()
+  
 def cost_vs_distance_scatter():
   fig.suptitle("Cost vs Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
@@ -99,7 +156,6 @@ def cost_vs_distance():
     context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
     
     Y = array( [ context.filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ], dtype=float )
-    C = array( [ context.filter(Sale.price < x).count() for x in X ], dtype=float )
     
     ax.bar(X,Y, width=step, color='g', edgecolor='g')
 
