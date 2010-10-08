@@ -59,14 +59,15 @@ def run():
 #floor area vs age
 
 def cost_vs_distance():
+  fig.suptitle("Cost Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
   q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None)
   
-  trim = int(q.count()/50.0)
+  trim = int(q.count()/10.0)
   price_max = int( q.order_by(-Sale.price)[trim].price )
   price_min = int( q.order_by(Sale.price).first().price )
-  step = int( (price_max-price_min)/10.0 )
+  step = int( (price_max-price_min)/30.0 )
   
   X = range(price_min, price_max, step)
   
@@ -74,22 +75,28 @@ def cost_vs_distance():
   DefaultDialect = orm.engine.dialect
   
   # radius in miles
-  #radii = [.5,1.0,1.5,2.5,5,10] * mile
-  radii = [1.5,5] * mile
+  radii = [1.0,1.5,2.5,5,10] * mile
   for i, radius in enumerate(radii):
     
-    ax = fig.add_subplot(2,1,i+1)
+    ax = plt.subplot(len(radii),1,i+1)
     
     context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
     
     Y = array( [ context.filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ], dtype=float )
     C = array( [ context.filter(Sale.price < x).count() for x in X ], dtype=float )
     
-    ax.bar(X,100*Y / session.query(Sale).filter(Sale.year_built >= 2009).count(), width=step, color='g', edgecolor='g')
-
+    ax.bar(X,Y, width=step, color='g', edgecolor='g')
 
     ax.axis([price_min,price_max,0,None])
-
+    ax.set_xticks(np.arange(0,price_max,250000))
+    ax.set_ylabel("< %s mi" % radius.asNumber(mile), rotation=0)
+    
+    if not i+1 == len(radii):
+      ax.xaxis.set_major_formatter(NullFormatter())
+    else:
+      ax.xaxis.set_major_formatter(mFormatter)
+      ax.set_xlabel('Asking Price ($)')
+    
     ax.grid(True)
         
   #ax2 = ax.twinx()
@@ -101,7 +108,6 @@ def cost_vs_distance():
   #fig.set_ylabel("Units Available (%)")
   #fig.set_xlabel("Asking Price (Million $)")
     
-  q = session.query(Sale).filter(Sale.geom != None)
   #print session.scalar(q[0].geom.distance(q[1].geom))
   #print [ session.scalar( q[0].geom.transform(2277).distance(x.geom.transform(2277)) ) for x in q[:100] ]
   #print q[0].address
