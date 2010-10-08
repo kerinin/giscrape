@@ -21,6 +21,9 @@ from giscrape.orm import *
 
 _Functions = [
   'run',
+  'age_vs_distance_scatter',
+  'size_vs_distance_scatter',
+  'size_vs_distance',
   'cost_per_sf_vs_distance',
   'cost_per_sf_vs_distance_scatter',
   'cost_vs_distance_scatter',
@@ -61,6 +64,78 @@ def run():
 #median rent ratio by floor area (control for bed/bath? include bars?)
 #floor area vs age
 
+def age_vs_distance_scatter():
+  fig.suptitle("Age vs Distance", fontsize=18, weight='bold')
+  shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
+  session = Session()
+  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.year_built != None).filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(-Sale.year_built)
+  
+  X = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in q[:-5] ]
+  Y = [ x.year_built for x in q[:-5] ]
+  
+  ax = plt.subplot(111)
+  ax.plot(X,Y,'om')
+  ax.grid(True)
+  ax.set_ylabel("Year Built")
+  ax.set_xlabel("Distance from Site (miles)")
+  
+  show()
+  
+def size_vs_distance_scatter():
+  fig.suptitle("Size vs Distance", fontsize=18, weight='bold')
+  shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
+  session = Session()
+  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.size != None).filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(Sale.size)
+  
+  X = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in q[:-5] ]
+  Y = [ x.size for x in q[:-5] ]
+  
+  ax = plt.subplot(111)
+  ax.plot(X,Y,'oc')
+  ax.grid(True)
+  ax.set_ylabel("Size (sf)")
+  ax.set_xlabel("Distance from Site (miles)")
+  
+  show()
+  
+def size_vs_distance():
+  fig.suptitle("Size Distribution by Distance", fontsize=18, weight='bold')
+  shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
+  session = Session()
+  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.size != None)
+  
+  trim = int(q.count()/10.0)
+  vmax = int( q.order_by(-Sale.size)[trim].size )
+  vmin = int( q.order_by(Sale.size).first().size )
+  step = int( (vmax-vmin)/30.0 )
+  
+  X = range(vmin, vmax, step)
+  
+  # radius in miles
+  radii = [1.0,1.5,2.5,5,10] * mile
+  for i, radius in enumerate(radii):
+    
+    ax = plt.subplot(len(radii),1,i+1)
+    
+    context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
+    
+    Y = array( [ context.filter(Sale.size >= x).filter(Sale.size < x+step).count() for x in X ], dtype=float )
+    
+    ax.bar(X,Y, width=step, color='c', edgecolor='c')
+
+    ax.axis([vmin,vmax,0,None])
+    #ax.set_xticks(np.arange(0,vmax,250000))
+    ax.set_ylabel("< %s mi" % radius.asNumber(mile), rotation=0)
+    
+    if not i+1 == len(radii):
+      ax.xaxis.set_major_formatter(NullFormatter())
+    else:
+      #ax.xaxis.set_major_formatter(mFormatter)
+      ax.set_xlabel('Size (sf)')
+    
+    ax.grid(True)
+    
+  show()
 
 def cost_per_sf_vs_distance_scatter():
   fig.suptitle("Cost/sf vs Distance", fontsize=18, weight='bold')
@@ -72,7 +147,7 @@ def cost_per_sf_vs_distance_scatter():
   Y = [ x.price / x.size for x in q[:-5] ]
   
   ax = plt.subplot(111)
-  ax.plot(X,Y,'og')
+  ax.plot(X,Y,'oy')
   ax.grid(True)
   ax.set_ylabel("Asking Price / SF ($/sf)")
   ax.set_xlabel("Distance from Site (miles)")
@@ -102,7 +177,7 @@ def cost_per_sf_vs_distance():
   
     Y = array( [ context.filter("for_sale.price / for_sale.size >= %s" % x).filter("for_sale.price / for_sale.size < %s" % (x + step)).count() for x in X ], dtype=float)
     
-    ax.bar(X,Y, width=step, color='g', edgecolor='g')
+    ax.bar(X,Y, width=step, color='y', edgecolor='y')
 
     ax.axis([vmin,vmax,0,None])
     ax.set_ylabel("< %s mi" % radius.asNumber(mile), rotation=0)
