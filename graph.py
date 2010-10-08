@@ -59,7 +59,7 @@ def run():
 #floor area vs age
 
 def cost_vs_distance():
-  shady = WKTSpatialElement("POINT(%s %s)" % (30.250421899999999, -97.699009500000003) )
+  shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
   q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None)
   
@@ -70,13 +70,17 @@ def cost_vs_distance():
   
   X = range(price_min, price_max, step)
   
+  global DefaultDialect
+  DefaultDialect = orm.engine.dialect
+  
   # radius in miles
-  radii = [.5, 1000] * mile
+  #radii = [.5,1.0,1.5,2.5,5,10] * mile
+  radii = [1.5,5] * mile
   for i, radius in enumerate(radii):
     
     ax = fig.add_subplot(2,1,i+1)
     
-    context = q.filter(Sale.geom.distance(shady) < radius.asNumber(m) )
+    context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
     
     Y = array( [ context.filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ], dtype=float )
     C = array( [ context.filter(Sale.price < x).count() for x in X ], dtype=float )
@@ -98,7 +102,11 @@ def cost_vs_distance():
   #fig.set_xlabel("Asking Price (Million $)")
     
   q = session.query(Sale).filter(Sale.geom != None)
-  print q[0].geom.distance(q[1])
+  #print session.scalar(q[0].geom.distance(q[1].geom))
+  #print [ session.scalar( q[0].geom.transform(2277).distance(x.geom.transform(2277)) ) for x in q[:100] ]
+  #print q[0].address
+  #print q[1].address
+  #print session.scalar( q[0].geom.transform(32139).distance(q[1].geom.transform(32139)))
 
   show()
 
