@@ -50,6 +50,7 @@ def init(self, **props):
      
 class Rental(Base):
   __tablename__ = 'rental'
+  __table_args__ = {'schema':'gis_schema'}
     
   def __init__(self, **props):
     init(self,**props)
@@ -90,6 +91,7 @@ class Rental(Base):
   
 class Sale(Base):
   __tablename__ = 'for_sale'
+  __table_args__ = {'schema':'gis_schema'}
   
   def __init__(self, **props):
     init(self,**props)
@@ -136,6 +138,7 @@ class Sale(Base):
   
 class Sold(Base):
   __tablename__ = 'sold'
+  __table_args__ = {'schema':'gis_schema'}
 
   def __init__(self, **props):
     init(self,**props)
