@@ -21,6 +21,7 @@ from giscrape.orm import *
 
 _Functions = [
   'run',
+  'cost_vs_distance_scatter',
   'cost_vs_distance',
   'size_vs_age',
   'new_sale_size_distribution',
@@ -58,6 +59,24 @@ def run():
 #median rent ratio by floor area (control for bed/bath? include bars?)
 #floor area vs age
 
+def cost_vs_distance_scatter():
+  fig.suptitle("Cost vs Distance", fontsize=18, weight='bold')
+  shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
+  session = Session()
+  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None).filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(Sale.price)
+  
+  X = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in q[:-5] ]
+  Y = [ x.price for x in q[:-5] ]
+  
+  ax = plt.subplot(111)
+  ax.plot(X,Y,'og')
+  ax.grid(True)
+  ax.yaxis.set_major_formatter(mFormatter)
+  ax.set_ylabel("Asking Price ($)")
+  ax.set_xlabel("Distance from Site (miles)")
+  
+  show()
+  
 def cost_vs_distance():
   fig.suptitle("Cost Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
@@ -70,9 +89,6 @@ def cost_vs_distance():
   step = int( (price_max-price_min)/30.0 )
   
   X = range(price_min, price_max, step)
-  
-  global DefaultDialect
-  DefaultDialect = orm.engine.dialect
   
   # radius in miles
   radii = [1.0,1.5,2.5,5,10] * mile
@@ -98,22 +114,7 @@ def cost_vs_distance():
       ax.set_xlabel('Asking Price ($)')
     
     ax.grid(True)
-        
-  #ax2 = ax.twinx()
-  #ax2.plot(X,100*C / session.query(Sale).count(),'k', lw=2)
-
-  #fig.axis([price_min,price_max,None,None])
-  #fig.xaxis.set_major_formatter(mFormatter)
-  #fig.axis([price_min,price_max,0,None])
-  #fig.set_ylabel("Units Available (%)")
-  #fig.set_xlabel("Asking Price (Million $)")
     
-  #print session.scalar(q[0].geom.distance(q[1].geom))
-  #print [ session.scalar( q[0].geom.transform(2277).distance(x.geom.transform(2277)) ) for x in q[:100] ]
-  #print q[0].address
-  #print q[1].address
-  #print session.scalar( q[0].geom.transform(32139).distance(q[1].geom.transform(32139)))
-
   show()
 
 def size_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
