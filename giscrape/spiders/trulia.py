@@ -22,19 +22,19 @@ class TruliaSpider(CrawlSpider):
 
   start_urls = [
       "http://www.trulia.com/for_sale/Austin,TX/",
-    #  "http://www.trulia.com/for_rent/Austin,TX/",
-		#	"http://www.trulia.com/sold/Austin,TX/",
+      "http://www.trulia.com/for_rent/Austin,TX/",
+			"http://www.trulia.com/sold/Austin,TX/",
   ]
   
   rules = (
     Rule( SgmlLinkExtractor(restrict_xpaths='//a[@class="pg_link"]') ),
     Rule( customExtractor(allow='www.trulia.com/rental'),callback='parse_rental' ),
-    Rule( customExtractor(allow='www.trulia.com/property'),callback='parse_for_sale' ),
-		Rule( customExtractor(allow='http://www.trulia.com/homes/Texas/Austin/sold'),callback='parse_sold' ),
+    Rule( customExtractor(allow='www.trulia.com/property'),callback='parse_listing' ),
+		Rule( customExtractor(allow='http://www.trulia.com/homes/Texas/Austin/sold'),callback='parse_sale' ),
   )
   
-  def parse_sold(self, response):
-    l = XPathItemLoader(item=SoldItem(), response=response)
+  def parse_sale(self, response):
+    l = XPathItemLoader(item=SaleItem(), response=response)
 
     l.add_value('url', response.url)
     l.add_xpath('address', '//h1[@class="address"]/text()')
@@ -85,8 +85,8 @@ class TruliaSpider(CrawlSpider):
     
     return l.load_item()
     
-  def parse_for_sale(self, response):
-    l = XPathItemLoader(item=SaleItem(), response=response)
+  def parse_listing(self, response):
+    l = XPathItemLoader(item=ListingItem(), response=response)
     
     l.add_value('url', response.url)
     l.add_xpath('address', '//h1[@class="address"]/text()')

@@ -6,8 +6,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from geoalchemy import *
 
-from formencode import validators
-
 engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
 metadata = MetaData(engine)
 Base = declarative_base(metadata=metadata)
@@ -89,8 +87,8 @@ class Rental(Base):
   
   last_crawl = Column(DateTime)
   
-class Sale(Base):
-  __tablename__ = 'for_sale'
+class Listing(Base):
+  __tablename__ = 'listing'
   __table_args__ = {'schema':'gis_schema'}
   
   def __init__(self, **props):
@@ -136,8 +134,8 @@ class Sale(Base):
   
   last_crawl = Column(DateTime)
   
-class Sold(Base):
-  __tablename__ = 'sold'
+class Sale(Base):
+  __tablename__ = 'sale'
   __table_args__ = {'schema':'gis_schema'}
 
   def __init__(self, **props):
@@ -174,5 +172,6 @@ class Sold(Base):
 
   last_crawl = Column(DateTime)
 	
+GeometryDDL(Listing.__table__)
 GeometryDDL(Rental.__table__)
 GeometryDDL(Sale.__table__)

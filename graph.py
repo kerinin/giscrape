@@ -69,9 +69,9 @@ def cost_per_sf_vs_size():
   fig.suptitle("Cost/SF vs Size", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None).filter(Sale.size != None)
+  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.price != None).filter(Listing.size != None)
   
-  context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(-Sale.geom.transform(32139).distance(shady.transform(32139)))
+  context = q.filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(-Listing.geom.transform(32139).distance(shady.transform(32139)))
 
   X = [ x.price / x.size for x in context.all() ]
   Y = [ x.size for x in context ]
@@ -94,7 +94,7 @@ def age_vs_distance_scatter():
   fig.suptitle("Age vs Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.year_built != None).filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(-Sale.year_built)
+  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.year_built != None).filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(-Listing.year_built)
   
   X = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in q[:-5] ]
   Y = [ x.year_built for x in q[:-5] ]
@@ -111,7 +111,7 @@ def size_vs_distance_scatter():
   fig.suptitle("Size vs Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.size != None).filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(Sale.size)
+  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.size != None).filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(Listing.size)
   
   X = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in q[:-5] ]
   Y = [ x.size for x in q[:-5] ]
@@ -128,11 +128,11 @@ def size_vs_distance():
   fig.suptitle("Size Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.size != None)
+  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.size != None)
   
   trim = int(q.count()/10.0)
-  vmax = int( q.order_by(-Sale.size)[trim].size )
-  vmin = int( q.order_by(Sale.size).first().size )
+  vmax = int( q.order_by(-Listing.size)[trim].size )
+  vmin = int( q.order_by(Listing.size).first().size )
   step = int( (vmax-vmin)/30.0 )
   
   X = range(vmin, vmax, step)
@@ -143,9 +143,9 @@ def size_vs_distance():
     
     ax = plt.subplot(len(radii),1,i+1)
     
-    context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
+    context = q.filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
     
-    Y = array( [ context.filter(Sale.size >= x).filter(Sale.size < x+step).count() for x in X ], dtype=float )
+    Y = array( [ context.filter(Listing.size >= x).filter(Listing.size < x+step).count() for x in X ], dtype=float )
     
     ax.bar(X,Y, width=step, color='c', edgecolor='c')
 
@@ -167,7 +167,7 @@ def cost_per_sf_vs_distance_scatter():
   fig.suptitle("Cost/sf vs Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.size != None).filter(Sale.price != None).filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(Sale.price/Sale.size)
+  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.size != None).filter(Listing.price != None).filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(Listing.price/Listing.size)
   
   X = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in q[:-5] ]
   Y = [ x.price / x.size for x in q[:-5] ]
@@ -184,11 +184,11 @@ def cost_per_sf_vs_distance():
   fig.suptitle("Cost/SF Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None).filter(Sale.size != None)
+  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.price != None).filter(Listing.size != None)
   
   trim = int(q.count()/50.0)
-  vmax = int( q.order_by(-Sale.price/Sale.size)[trim].price / q.order_by(-Sale.price/Sale.size)[trim].size)
-  vmin = int( q.order_by(Sale.price/Sale.size).first().price / q.order_by(Sale.price/Sale.size).first().size )
+  vmax = int( q.order_by(-Listing.price/Listing.size)[trim].price / q.order_by(-Listing.price/Listing.size)[trim].size)
+  vmin = int( q.order_by(Listing.price/Listing.size).first().price / q.order_by(Listing.price/Listing.size).first().size )
   step = int( (vmax-vmin)/30.0 )
   
   X = arange(vmin, vmax, step)
@@ -199,9 +199,9 @@ def cost_per_sf_vs_distance():
     
     ax = plt.subplot(len(radii),1,i+1)
     
-    context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
+    context = q.filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
   
-    Y = array( [ context.filter("for_sale.price / for_sale.size >= %s" % x).filter("for_sale.price / for_sale.size < %s" % (x + step)).count() for x in X ], dtype=float)
+    Y = array( [ context.filter("listing.price / listing.size >= %s" % x).filter("listing.price / listing.size < %s" % (x + step)).count() for x in X ], dtype=float)
     
     ax.bar(X,Y, width=step, color='y', edgecolor='y')
 
@@ -221,7 +221,7 @@ def cost_vs_distance_scatter():
   fig.suptitle("Cost vs Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None).filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(Sale.price)
+  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.price != None).filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(Listing.price)
   
   X = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in q[:-5] ]
   Y = [ x.price for x in q[:-5] ]
@@ -239,11 +239,11 @@ def cost_vs_distance():
   fig.suptitle("Cost Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None)
+  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.price != None)
   
   trim = int(q.count()/10.0)
-  price_max = int( q.order_by(-Sale.price)[trim].price )
-  price_min = int( q.order_by(Sale.price).first().price )
+  price_max = int( q.order_by(-Listing.price)[trim].price )
+  price_min = int( q.order_by(Listing.price).first().price )
   step = int( (price_max-price_min)/30.0 )
   
   X = range(price_min, price_max, step)
@@ -254,9 +254,9 @@ def cost_vs_distance():
     
     ax = plt.subplot(len(radii),1,i+1)
     
-    context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
+    context = q.filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
     
-    Y = array( [ context.filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ], dtype=float )
+    Y = array( [ context.filter(Listing.price >= x).filter(Listing.price < x+step).count() for x in X ], dtype=float )
     
     ax.bar(X,Y, width=step, color='g', edgecolor='g')
 
@@ -279,15 +279,15 @@ def size_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
   
   session = Session()
   
-  q = session.query(Sale).filter(Sale.year_built != None).filter(Sale.size != None)
+  q = session.query(Listing).filter(Listing.year_built != None).filter(Listing.size != None)
   total = q.count()
   trim = int( total * .01 )
-  first_date = q.order_by(asc(Sale.year_built))[trim].year_built
-  last_date = q.order_by(desc(Sale.year_built)).first().year_built
+  first_date = q.order_by(asc(Listing.year_built))[trim].year_built
+  last_date = q.order_by(desc(Listing.year_built)).first().year_built
   step = int((last_date - first_date)/12. )
   
   def sizes(start,end):
-    return [ x.size for x in q.filter('for_sale.year_built >= %s' % start).filter('for_sale.year_built < %s' % end).all() ]
+    return [ x.size for x in q.filter('listing.year_built >= %s' % start).filter('listing.year_built < %s' % end).all() ]
     
   X = arange(first_date, last_date, step)
   Y = [ sizes(x,x+step) for x in X ]
@@ -315,20 +315,20 @@ def new_sale_size_distribution( ax = fig.add_subplot(1,1,1), to_show = True):
   
   session = Session()
   
-  area_query = session.query(Sale).filter(Sale.size != None)
+  area_query = session.query(Listing).filter(Listing.size != None)
   total = area_query.count()
   trim = int( total * .02 )
-  max_area = area_query.order_by(desc(Sale.size))[trim].size
-  min_area = area_query.order_by(asc(Sale.size)).first().size
+  max_area = area_query.order_by(desc(Listing.size))[trim].size
+  min_area = area_query.order_by(asc(Listing.size)).first().size
   step = int( (max_area - min_area)/100.0 )
   
   X = arange(min_area, max_area, step)
-  Y = array( [ area_query.filter("for_sale.size >= %s" % str(x)).filter("for_sale.size < %s" % str(x+step)).count() for x in X ], dtype=float )
-  C = array( [ area_query.filter("for_sale.size < %s" % x).count() for x in X], dtype = float )
-  nY = array( [ area_query.filter("for_sale.size >= %s" % str(x)).filter("for_sale.size < %s" % str(x+step)).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float )
-  nC = array( [ area_query.filter("for_sale.size < %s" % x).filter(Sale.year_built >= 2009).count() for x in X], dtype = float )
+  Y = array( [ area_query.filter("listing.size >= %s" % str(x)).filter("listing.size < %s" % str(x+step)).count() for x in X ], dtype=float )
+  C = array( [ area_query.filter("listing.size < %s" % x).count() for x in X], dtype = float )
+  nY = array( [ area_query.filter("listing.size >= %s" % str(x)).filter("listing.size < %s" % str(x+step)).filter(Listing.year_built >= 2009).count() for x in X ], dtype=float )
+  nC = array( [ area_query.filter("listing.size < %s" % x).filter(Listing.year_built >= 2009).count() for x in X], dtype = float )
   
-  ax.bar(X,100*nY/area_query.filter(Sale.year_built >= 2009).count(), width=step, color='c',edgecolor='c')
+  ax.bar(X,100*nY/area_query.filter(Listing.year_built >= 2009).count(), width=step, color='c',edgecolor='c')
   ax.bar(X,100*Y/area_query.count(), width=step, color='k', linewidth=0, alpha=.3)
   ax.set_ylabel("Units Available (%)")
   ax.set_xlabel("Size (sf)")
@@ -339,7 +339,7 @@ def new_sale_size_distribution( ax = fig.add_subplot(1,1,1), to_show = True):
       
   ax2 = ax.twinx()
   ax2.plot(X,100*C/area_query.count(),'k', alpha=.3, lw=2)
-  ax2.plot(X,100*nC/area_query.filter(Sale.year_built >= 2009).count(),'k', lw=2)
+  ax2.plot(X,100*nC/area_query.filter(Listing.year_built >= 2009).count(),'k', lw=2)
   ax2.set_ylabel('Cumulative Units (%)')
   ax2.axis([min_area,max_area,0,100])
   ax2.set_yticks(np.arange(0,101,10))
@@ -353,21 +353,21 @@ def new_cost_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   fig.suptitle("New Home Price/sf Distribution", fontsize=18, weight='bold')
   session = Session()
 
-  per_sf_query = session.query(Sale).filter(Sale.price != None).filter(Sale.size != None).order_by(asc(Sale.price / Sale.size))
+  per_sf_query = session.query(Listing).filter(Listing.price != None).filter(Listing.size != None).order_by(asc(Listing.price / Listing.size))
   trim = int( per_sf_query.count() * .01 )
   per_sf_min = int( per_sf_query.first().price / per_sf_query.first().size )
-  per_sf_query = session.query(Sale).filter(Sale.price != None).filter(Sale.size != None).order_by(desc(Sale.price / Sale.size))
+  per_sf_query = session.query(Listing).filter(Listing.price != None).filter(Listing.size != None).order_by(desc(Listing.price / Listing.size))
   per_sf_max = int( per_sf_query[trim].price / per_sf_query[trim].size )
 
   step = int( (per_sf_max-per_sf_min)/100.0 )
 
   X = arange(per_sf_min, per_sf_max, step)
-  Y = array( [ per_sf_query.filter("for_sale.price / for_sale.size >= %s" % x).filter("for_sale.price / for_sale.size < %s" % (x + step)).count() for x in X ], dtype=float)
-  nY = array( [ per_sf_query.filter("for_sale.price / for_sale.size >= %s" % x).filter("for_sale.price / for_sale.size < %s" % (x + step)).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float)
-  C = array( [ per_sf_query.filter("for_sale.price / for_sale.size < %s" % (x + step)).count() for x in X ], dtype=float)
-  nC = array( [ per_sf_query.filter("for_sale.price / for_sale.size < %s" % (x + step)).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float)
+  Y = array( [ per_sf_query.filter("listing.price / listing.size >= %s" % x).filter("listing.price / listing.size < %s" % (x + step)).count() for x in X ], dtype=float)
+  nY = array( [ per_sf_query.filter("listing.price / listing.size >= %s" % x).filter("listing.price / listing.size < %s" % (x + step)).filter(Listing.year_built >= 2009).count() for x in X ], dtype=float)
+  C = array( [ per_sf_query.filter("listing.price / listing.size < %s" % (x + step)).count() for x in X ], dtype=float)
+  nC = array( [ per_sf_query.filter("listing.price / listing.size < %s" % (x + step)).filter(Listing.year_built >= 2009).count() for x in X ], dtype=float)
   
-  ax.bar(X,100 * nY / per_sf_query.filter(Sale.year_built >= 2009).count(), width=step, color='y', edgecolor='y')
+  ax.bar(X,100 * nY / per_sf_query.filter(Listing.year_built >= 2009).count(), width=step, color='y', edgecolor='y')
   ax.bar(X,100 * Y / per_sf_query.count(), width=step, color='k', linewidth=0, alpha=.3)
   ax.set_ylabel("Units Available (%)")
   ax.set_xlabel("Asking Price / sf ($/sf)")
@@ -378,7 +378,7 @@ def new_cost_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
      
   ax2 = ax.twinx()
   ax2.plot(X,100*C/per_sf_query.count(),'k', alpha=.3, lw=2)
-  ax2.plot(X,100*nC/per_sf_query.filter(Sale.year_built >= 2009).count(),'k', lw=2)
+  ax2.plot(X,100*nC/per_sf_query.filter(Listing.year_built >= 2009).count(),'k', lw=2)
   ax2.set_ylabel('Cumulative Units (%)')
   ax2.axis([per_sf_min,per_sf_max,0,100])
   ax2.set_yticks(np.arange(0,101,10))
@@ -392,19 +392,19 @@ def new_sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   fig.suptitle("New Home Availability by Price", fontsize=18, weight='bold')
   session = Session()
     
-  trim = int(session.query(Sale).count()/50.0)
-  price_max = int( session.query(Sale).filter(Sale.price != None).order_by(-Sale.price)[trim].price )
-  price_min = int( session.query(Sale).filter(Sale.price != None).order_by(Sale.price)[trim].price )
+  trim = int(session.query(Listing).count()/50.0)
+  price_max = int( session.query(Listing).filter(Listing.price != None).order_by(-Listing.price)[trim].price )
+  price_min = int( session.query(Listing).filter(Listing.price != None).order_by(Listing.price)[trim].price )
   step = int( (price_max-price_min)/100.0 )
 
   X = range(price_min, price_max, step)
-  Y = array( [ session.query(Sale).filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ], dtype=float )
-  nY = array( [session.query(Sale).filter(Sale.price >= x).filter(Sale.price < x+step).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float )
-  C = array( [ session.query(Sale).filter(Sale.price < x).count() for x in X ], dtype=float )
-  nC = array([ session.query(Sale).filter(Sale.price < x).filter(Sale.year_built >= 2009).count() for x in X ], dtype=float )
+  Y = array( [ session.query(Listing).filter(Listing.price >= x).filter(Listing.price < x+step).count() for x in X ], dtype=float )
+  nY = array( [session.query(Listing).filter(Listing.price >= x).filter(Listing.price < x+step).filter(Listing.year_built >= 2009).count() for x in X ], dtype=float )
+  C = array( [ session.query(Listing).filter(Listing.price < x).count() for x in X ], dtype=float )
+  nC = array([ session.query(Listing).filter(Listing.price < x).filter(Listing.year_built >= 2009).count() for x in X ], dtype=float )
   
-  ax.bar(X,100*nY / session.query(Sale).filter(Sale.year_built >= 2009).count(), width=step, color='g', edgecolor='g')
-  ax.bar(X,100*Y / session.query(Sale).count(), width=step, color='k', linewidth=0, alpha=.3)
+  ax.bar(X,100*nY / session.query(Listing).filter(Listing.year_built >= 2009).count(), width=step, color='g', edgecolor='g')
+  ax.bar(X,100*Y / session.query(Listing).count(), width=step, color='k', linewidth=0, alpha=.3)
   ax.set_ylabel("Units Available (%)")
   ax.set_xlabel("Asking Price (Million $)")
   ax.axis([price_min,price_max,None,None])
@@ -415,8 +415,8 @@ def new_sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
     line.set_alpha(0)
   
   ax2 = ax.twinx()
-  ax2.plot(X,100*C / session.query(Sale).count(),'k', alpha = .3, lw=2)
-  ax2.plot(X,100*nC / session.query(Sale).filter(Sale.year_built >= 2009).count(),'k', lw=2)
+  ax2.plot(X,100*C / session.query(Listing).count(),'k', alpha = .3, lw=2)
+  ax2.plot(X,100*nC / session.query(Listing).filter(Listing.year_built >= 2009).count(),'k', lw=2)
   ax2.set_ylabel('Cumulative Units (%)')
   ax2.axis([price_min,price_max,0,100])
   ax2.xaxis.set_major_formatter(mFormatter)
@@ -433,12 +433,12 @@ def recent_median_cost_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
   
   session = Session()
   
-  q = session.query(Sale).filter(Sale.year_built != None).filter(Sale.price != None).filter(Sale.year_built >= 1995)
+  q = session.query(Listing).filter(Listing.year_built != None).filter(Listing.price != None).filter(Listing.year_built >= 1995)
   total = q.count()
 
   
   def prices(year):
-    return [ x.price for x in q.filter('for_sale.year_built = %s' % year).all() ]
+    return [ x.price for x in q.filter('listing.year_built = %s' % year).all() ]
     
   X = arange(1996, 2011, 1)
   Y = [ prices(x) for x in X ]
@@ -466,15 +466,15 @@ def median_cost_vs_age( ax = fig.add_subplot(1,1,1), to_show=True):
   
   session = Session()
   
-  q = session.query(Sale).filter(Sale.year_built != None).filter(Sale.price != None)
+  q = session.query(Listing).filter(Listing.year_built != None).filter(Listing.price != None)
   total = q.count()
   trim = int( total * .01 )
-  first_date = q.order_by(asc(Sale.year_built))[trim].year_built
-  last_date = q.order_by(desc(Sale.year_built)).first().year_built
+  first_date = q.order_by(asc(Listing.year_built))[trim].year_built
+  last_date = q.order_by(desc(Listing.year_built)).first().year_built
   step = int((last_date - first_date)/12. )
   
   def prices(start,end):
-    return [ x.price for x in q.filter('for_sale.year_built >= %s' % start).filter('for_sale.year_built < %s' % end).all() ]
+    return [ x.price for x in q.filter('listing.year_built >= %s' % start).filter('listing.year_built < %s' % end).all() ]
     
   X = arange(first_date, last_date, step)
   Y = [ prices(x,x+step) for x in X ]
@@ -502,16 +502,16 @@ def sale_size_distribution( ax = fig.add_subplot(1,1,1), to_show = True):
   
   session = Session()
   
-  area_query = session.query(Sale).filter(Sale.size != None)
+  area_query = session.query(Listing).filter(Listing.size != None)
   total = area_query.count()
   trim = int( total * .02 )
-  max_area = area_query.order_by(desc(Sale.size))[trim].size
-  min_area = area_query.order_by(asc(Sale.size)).first().size
+  max_area = area_query.order_by(desc(Listing.size))[trim].size
+  min_area = area_query.order_by(asc(Listing.size)).first().size
   step = int( (max_area - min_area)/100.0 )
   
   X = arange(min_area, max_area, step)
-  Y = [ area_query.filter("for_sale.size >= %s" % str(x)).filter("for_sale.size < %s" % str(x+step)).count() for x in X ]
-  C = [ 100*float(area_query.filter("for_sale.size < %s" % str(x+step)).count())/total for x in X ]
+  Y = [ area_query.filter("listing.size >= %s" % str(x)).filter("listing.size < %s" % str(x+step)).count() for x in X ]
+  C = [ 100*float(area_query.filter("listing.size < %s" % str(x+step)).count())/total for x in X ]
   
   ax.bar(X,Y, width=step, color='c',edgecolor='c')
   
@@ -536,14 +536,14 @@ def rent_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   per_sf_query = session.query(Rental).filter(Rental.price != None).filter(Rental.size != None).order_by(desc(Rental.price / Rental.size))
   per_sf_max = float( per_sf_query[trim].price / per_sf_query[trim].size )
 
-  step = float( (per_sf_max-per_sf_min)/10.0 )
+  step = float( (per_sf_max-per_sf_min)/100.0 )
   print [per_sf_max,per_sf_min,step]
 
   X = arange(per_sf_min, per_sf_max, step)
   Y = [ per_sf_query.filter("rental.price / rental.size >= %s" % x).filter("rental.price / rental.size < %s" % (x + step)).count() for x in X ]
   C = array( [ per_sf_query.filter("rental.price / rental.size < %s" % (x + step)).count() for x in X ] )
     
-  ax.bar(X,Y, width=step, color='y')
+  ax.bar(X,Y, width=step, color='y', edgecolor='y')
   
   ax.set_ylabel("Units Available")
   ax.set_xlabel("Monthly Rent / sf ($/sf)")
@@ -559,19 +559,19 @@ def cost_per_sf_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   fig.suptitle("Home Price/sf Distribution", fontsize=18, weight='bold')
   session = Session()
 
-  per_sf_query = session.query(Sale).filter(Sale.price != None).filter(Sale.size != None).order_by(asc(Sale.price / Sale.size))
+  per_sf_query = session.query(Listing).filter(Listing.price != None).filter(Listing.size != None).order_by(asc(Listing.price / Listing.size))
   trim = int( per_sf_query.count() * .01 )
   per_sf_min = int( per_sf_query.first().price / per_sf_query.first().size )
-  per_sf_query = session.query(Sale).filter(Sale.price != None).filter(Sale.size != None).order_by(desc(Sale.price / Sale.size))
+  per_sf_query = session.query(Listing).filter(Listing.price != None).filter(Listing.size != None).order_by(desc(Listing.price / Listing.size))
   per_sf_max = int( per_sf_query[trim].price / per_sf_query[trim].size )
 
   step = int( (per_sf_max-per_sf_min)/100.0 )
 
   X = arange(per_sf_min, per_sf_max, step)
-  Y = [ per_sf_query.filter("for_sale.price / for_sale.size >= %s" % x).filter("for_sale.price / for_sale.size < %s" % (x + step)).count() for x in X ]
-  C = [ per_sf_query.filter("for_sale.price / for_sale.size < %s" % (x + step)).count() for x in X ]
+  Y = [ per_sf_query.filter("listing.price / listing.size >= %s" % x).filter("listing.price / listing.size < %s" % (x + step)).count() for x in X ]
+  C = [ per_sf_query.filter("listing.price / listing.size < %s" % (x + step)).count() for x in X ]
   
-  ax.bar(X,Y, width=step, color='y')
+  ax.bar(X,Y, width=step, color='y', edgecolor='y')
   
   ax.set_ylabel("Units Available")
   ax.set_xlabel("Asking Price / sf ($/sf)")
@@ -587,16 +587,16 @@ def sale_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   fig.suptitle("Home Availability by Price", fontsize=18, weight='bold')
   session = Session()
     
-  trim = int(session.query(Sale).count()/50.0)
-  price_max = int( session.query(Sale).filter(Sale.price != None).order_by(-Sale.price)[trim].price )
-  price_min = int( session.query(Sale).filter(Sale.price != None).order_by(Sale.price)[trim].price )
+  trim = int(session.query(Listing).count()/50.0)
+  price_max = int( session.query(Listing).filter(Listing.price != None).order_by(-Listing.price)[trim].price )
+  price_min = int( session.query(Listing).filter(Listing.price != None).order_by(Listing.price)[trim].price )
   step = int( (price_max-price_min)/100.0 )
 
   X = range(price_min, price_max, step)
-  Y = [ session.query(Sale).filter(Sale.price >= x).filter(Sale.price < x+step).count() for x in X ]
-  C = [ session.query(Sale).filter(Sale.price < x).count() for x in X ]
+  Y = [ session.query(Listing).filter(Listing.price >= x).filter(Listing.price < x+step).count() for x in X ]
+  C = [ session.query(Listing).filter(Listing.price < x).count() for x in X ]
 
-  ax.bar(X,Y, width=step, color='g')
+  ax.bar(X,Y, width=step, color='g', edgecolor='g')
   ax.set_ylabel("Units Available")
   ax.set_xlabel("Asking Price (Million $)")
   ax.grid(True)
@@ -625,7 +625,7 @@ def rental_price_distribution( ax = fig.add_subplot(1,1,1), to_show = True ):
   Y = [ session.query(Rental).filter(Rental.price >= x).filter(Rental.price < x+step).count() for x in X ]
   C = [ session.query(Rental).filter(Rental.price < x).count() for x in X ]
     
-  ax.bar(X,Y, width=step, color='g')
+  ax.bar(X,Y, width=step, color='g', edgecolor='g')
   ax.set_ylabel("Units Available")
   ax.set_xlabel("Monthly Rent ($)")
   ax.grid(True)

@@ -38,8 +38,8 @@ class SQLBackend(object):
         obj = upsert(orm.Rental, output )
       elif( isinstance(output, items.SaleItem) ):
         obj = upsert(orm.Sale, output )
-      elif( isinstance(output, items.SoldItem) ):
-        obj = upsert(orm.Sold, output )
+      elif( isinstance(output, items.ListingItem) ):
+        obj = upsert(orm.Listing, output )
       else:
         raise orm.Fail, 'unknown data type'
     except orm.Fail:

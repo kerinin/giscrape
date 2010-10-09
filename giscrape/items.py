@@ -32,7 +32,7 @@ class RentalItem(Item):
   
   public_records = Field()
     
-class SoldItem(Item):
+class SaleItem(Item):
   url = Field()
   address = Field()
 
@@ -50,7 +50,7 @@ class SoldItem(Item):
 
   sale_date = Field()
 
-class SaleItem(Item):
+class ListingItem(Item):
   url = Field()
   address = Field()
   
