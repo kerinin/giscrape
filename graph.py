@@ -18,7 +18,6 @@ from unum.units import *
 
 from giscrape import orm
 from giscrape.orm import *
-from giscrape.gis_classes import *
 
 _Functions = [
   'run',
@@ -129,7 +128,10 @@ def size_vs_distance():
   fig.suptitle("Size Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.size != None)
+
+  contexts = session.query(Context).order_by(Context.geom.area)
+  boundary = session.query(Context).order_by(-Context.geom.area).first()
+  q = session.query(Listing).filter(Listing.contexts.any( id = boundary.id )).filter(Listing.geom != None).filter(Listing.size != None)
   
   trim = int(q.count()/10.0)
   vmax = int( q.order_by(-Listing.size)[trim].size )
@@ -138,23 +140,21 @@ def size_vs_distance():
   
   X = range(vmin, vmax, step)
   
-  # radius in miles
-  radii = [1.0,1.5,2.5,5,10] * mile
-  for i, radius in enumerate(radii):
+  for i,context in enumerate( contexts.all() ):
     
-    ax = plt.subplot(len(radii),1,i+1)
+    ax = plt.subplot(contexts.count(),1,i+1)
     
-    context = q.filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
+    qi = q.filter(Listing.contexts.any( id = context.id ))
     
-    Y = array( [ context.filter(Listing.size >= x).filter(Listing.size < x+step).count() for x in X ], dtype=float )
+    Y = array( [ qi.filter(Listing.size >= x).filter(Listing.size < x+step).count() for x in X ], dtype=float )
     
     ax.bar(X,Y, width=step, color='c', edgecolor='c')
 
     ax.axis([vmin,vmax,0,None])
     #ax.set_xticks(np.arange(0,vmax,250000))
-    ax.set_ylabel("< %s mi" % radius.asNumber(mile), rotation=0)
+    ax.set_ylabel(context.name.replace(' ','\n'), rotation=0)
     
-    if not i+1 == len(radii):
+    if not i+1 == contexts.count():
       ax.xaxis.set_major_formatter(NullFormatter())
     else:
       #ax.xaxis.set_major_formatter(mFormatter)
@@ -185,7 +185,10 @@ def cost_per_sf_vs_distance():
   fig.suptitle("Cost/SF Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.price != None).filter(Listing.size != None)
+  
+  contexts = session.query(Context).order_by(Context.geom.area)
+  boundary = session.query(Context).order_by(-Context.geom.area).first()
+  q = session.query(Listing).filter(Listing.contexts.any( id = boundary.id )).filter(Listing.geom != None).filter(Listing.price != None).filter(Listing.size != None)
   
   trim = int(q.count()/50.0)
   vmax = int( q.order_by(-Listing.price/Listing.size)[trim].price / q.order_by(-Listing.price/Listing.size)[trim].size)
@@ -194,22 +197,20 @@ def cost_per_sf_vs_distance():
   
   X = arange(vmin, vmax, step)
   
-  # radius in miles
-  radii = [1.0,1.5,2.5,5,10] * mile
-  for i, radius in enumerate(radii):
+  for i,context in enumerate( contexts.all() ):
     
-    ax = plt.subplot(len(radii),1,i+1)
+    ax = plt.subplot(contexts.count(),1,i+1)
     
-    context = q.filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
-  
-    Y = array( [ context.filter("listing.price / listing.size >= %s" % x).filter("listing.price / listing.size < %s" % (x + step)).count() for x in X ], dtype=float)
+    qi = q.filter(Listing.contexts.any( id = context.id ))
+    
+    Y = array( [ qi.filter("listing.price / listing.size >= %s" % x).filter("listing.price / listing.size < %s" % (x + step)).count() for x in X ], dtype=float)
     
     ax.bar(X,Y, width=step, color='y', edgecolor='y')
 
     ax.axis([vmin,vmax,0,None])
-    ax.set_ylabel("< %s mi" % radius.asNumber(mile), rotation=0)
+    ax.set_ylabel(context.name.replace(' ','\n'), rotation=0)
     
-    if not i+1 == len(radii):
+    if not i+1 == contexts.count():
       ax.xaxis.set_major_formatter(NullFormatter())
     else:
       ax.set_xlabel('Asking Price / SF ($/sf)')
@@ -240,32 +241,33 @@ def cost_vs_distance():
   fig.suptitle("Cost Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
-  q = session.query(Listing).filter(Listing.geom != None).filter(Listing.price != None)
   
-  trim = int(q.count()/10.0)
+  contexts = session.query(Context).order_by(Context.geom.area)
+  boundary = session.query(Context).order_by(-Context.geom.area).first()
+  q = session.query(Listing).filter(Listing.contexts.any( id = boundary.id )).filter(Listing.geom != None).filter(Listing.price != None)
+  
+  trim = int(q.count()/50.0)
   price_max = int( q.order_by(-Listing.price)[trim].price )
   price_min = int( q.order_by(Listing.price).first().price )
   step = int( (price_max-price_min)/30.0 )
   
   X = range(price_min, price_max, step)
   
-  # radius in miles
-  radii = [1.0,1.5,2.5,5,10] * mile
-  for i, radius in enumerate(radii):
+  for i,context in enumerate( contexts.all() ):
     
-    ax = plt.subplot(len(radii),1,i+1)
+    ax = plt.subplot(contexts.count(),1,i+1)
     
-    context = q.filter(Listing.geom.transform(32139).distance(shady.transform(32139)) < radius.asNumber(m) )
+    qi = q.filter(Listing.contexts.any( id = context.id ))
     
-    Y = array( [ context.filter(Listing.price >= x).filter(Listing.price < x+step).count() for x in X ], dtype=float )
+    Y = array( [ qi.filter(Listing.price >= x).filter(Listing.price < x+step).count() for x in X ], dtype=float )
     
     ax.bar(X,Y, width=step, color='g', edgecolor='g')
 
     ax.axis([price_min,price_max,0,None])
-    ax.set_xticks(np.arange(0,price_max,250000))
-    ax.set_ylabel("< %s mi" % radius.asNumber(mile), rotation=0)
+    ax.set_xticks(np.arange(0,price_max,50000))
+    ax.set_ylabel(context.name.replace(' ','\n'), rotation=0)
     
-    if not i+1 == len(radii):
+    if not i+1 == contexts.count():
       ax.xaxis.set_major_formatter(NullFormatter())
     else:
       ax.xaxis.set_major_formatter(mFormatter)
