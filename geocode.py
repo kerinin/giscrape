@@ -7,8 +7,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import mapper, sessionmaker
 from sqlalchemy.sql.expression import *
 
-from giscrape import orm
+from giscrape import orm, gis_classes
 from giscrape.orm import *
+from gis_classes import *
 
 from geopy import geocoders
 from geopy.geocoders.google import *

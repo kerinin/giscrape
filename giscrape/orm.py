@@ -175,3 +175,4 @@ class Sale(Base):
 GeometryDDL(Listing.__table__)
 GeometryDDL(Rental.__table__)
 GeometryDDL(Sale.__table__)
+

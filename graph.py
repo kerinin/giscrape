@@ -18,6 +18,7 @@ from unum.units import *
 
 from giscrape import orm
 from giscrape.orm import *
+from giscrape.gis_classes import *
 
 _Functions = [
   'run',
