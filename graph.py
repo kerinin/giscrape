@@ -75,11 +75,11 @@ def cost_per_sf_vs_size():
 
   X = [ x.price / x.size for x in context.all() ]
   Y = [ x.size for x in context ]
-  S = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in context ]
-    
+  S = 20*array( [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in context ], dtype=float )**3
+  
   ax = plt.subplot(111)
   
-  ax.scatter(X,Y,X,'c', alpha=.75)
+  ax.scatter(X,Y,S,'c', alpha=.75)
   
   ax.set_title('Dot size denotes distance from site')
   ax.set_xlabel('Asking Price / SF ($/sf)')
