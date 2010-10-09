@@ -87,6 +87,9 @@ class Rental(Base):
   
   last_crawl = Column(DateTime)
   
+  tcad_2008_id = Column(Integer, ForeignKey('gis_schema.2008 TCAD Parcels.gid'))
+  tcad_2008_parcel = relationship("TCAD_2008", backref="rentals")  
+  
 class Listing(Base):
   __tablename__ = 'listing'
   __table_args__ = {'schema':'gis_schema'}
@@ -134,6 +137,9 @@ class Listing(Base):
   
   last_crawl = Column(DateTime)
   
+  tcad_2008_id = Column(Integer, ForeignKey('gis_schema.2008 TCAD Parcels.gid'))
+  tcad_2008_parcel = relationship("TCAD_2008", backref="listings")  
+  
 class Sale(Base):
   __tablename__ = 'sale'
   __table_args__ = {'schema':'gis_schema'}
@@ -171,6 +177,9 @@ class Sale(Base):
   geom = GeometryColumn(Point(2), nullable=True)
 
   last_crawl = Column(DateTime)
+  
+  tcad_2008_id = Column(Integer, ForeignKey('gis_schema.2008 TCAD Parcels.gid'))
+  tcad_2008_parcel = relationship("TCAD_2008", backref="sales")  
 
 context_listing = Table('context_listing', Base.metadata,
     Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
@@ -218,6 +227,28 @@ class Context(Base):
     self.sales = []
     self.rentals = session.query(Sale).filter(Sale.geom != None).filter( Sale.geom.transform(2277).within(self.geom.transform(2277))).all()
     
+class TCAD_2008(Base):
+  __tablename__ = '2008 TCAD Parcels'
+  __table_args__ = {'schema':'gis_schema'}
+  
+  gid           = Column(Integer, primary_key=True)
+  acreage       = Column(Float, nullable=True)
+  roads         = Column(String, nullable=True)
+  water         = Column(String, nullable=True)
+  ag_land       = Column(String, nullable=True)
+  vli_2005      = Column(String, nullable=True)
+  vli_2008      = Column(String, nullable=True)
+  pct_impr      = Column(String, nullable=True)
+  geo_id        = Column(String, nullable=True)
+  land_state    = Column(String, nullable=True)
+  marketvalu    = Column(Integer, nullable=True)
+  shape_leng    = Column(Numeric, nullable=True)
+  shape_area    = Column(Numeric, nullable=True)
+  improvemen    = Column(Integer, nullable=True)
+  land_value    = Column(Integer, nullable=True)
+  value_per_acre= Column(Integer, nullable=True)
+  the_geom      = GeometryColumn(Polygon(2, srid=2277 ))
+  
 	
 GeometryDDL(Listing.__table__)
 GeometryDDL(Rental.__table__)
