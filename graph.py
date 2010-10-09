@@ -21,6 +21,7 @@ from giscrape.orm import *
 
 _Functions = [
   'run',
+  'cost_per_sf_vs_size',
   'age_vs_distance_scatter',
   'size_vs_distance_scatter',
   'size_vs_distance',
@@ -64,6 +65,31 @@ def run():
 #median rent ratio by floor area (control for bed/bath? include bars?)
 #floor area vs age
 
+def cost_per_sf_vs_size():
+  fig.suptitle("Cost/SF vs Size", fontsize=18, weight='bold')
+  shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
+  session = Session()
+  q = session.query(Sale).filter(Sale.geom != None).filter(Sale.price != None).filter(Sale.size != None)
+  
+  context = q.filter(Sale.geom.transform(32139).distance(shady.transform(32139)) < (2.5 * mile).asNumber(m) ).order_by(-Sale.geom.transform(32139).distance(shady.transform(32139)))
+
+  X = [ x.price / x.size for x in context.all() ]
+  Y = [ x.size for x in context ]
+  S = [ (session.scalar(x.geom.transform(32139).distance(shady.transform(32139))) * m ).asNumber(mile) for x in context ]
+    
+  ax = plt.subplot(111)
+  
+  ax.scatter(X,Y,X,'c', alpha=.75)
+  
+  ax.set_title('Dot size denotes distance from site')
+  ax.set_xlabel('Asking Price / SF ($/sf)')
+  ax.set_ylabel('Size (sf)')
+    
+  ax.grid(True)
+  ax.axis([0,400,500,2000])
+
+  show()
+  
 def age_vs_distance_scatter():
   fig.suptitle("Age vs Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
