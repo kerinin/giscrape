@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import *
 from geoalchemy import *
 
-engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
+engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb')
 metadata = MetaData(engine)
 Base = declarative_base(metadata=metadata)
 Session = sessionmaker(bind=engine)

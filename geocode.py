@@ -7,19 +7,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import mapper, sessionmaker
 from sqlalchemy.sql.expression import *
 
-from giscrape import orm, gis_classes
+from giscrape import orm
 from giscrape.orm import *
-from gis_classes import *
 
 from geopy import geocoders
 from geopy.geocoders.google import *
 
 _Functions = ['run']
-	
-engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
-metadata = orm.Base.metadata
-metadata.create_all(engine) 
-Session = sessionmaker(bind=engine)
 
 g = geocoders.Google() 
 #g = geocoders.Yahoo('njjoUkPV34EK.D.t1Ev79ZEFAZtrCdSxDqGdlsNUPVQahXlcWxWTellv1bvHDA--')
@@ -32,7 +26,6 @@ def run():
     while 1:
       rentals = session.query(Rental).filter(Rental.address != None).filter(Rental.lat == None).filter(Rental.lon == None)[:100]
       if not rentals: break
-      
       for rental in rentals:
         try:
           place, (lat, lon) = list(g.geocode(rental.address, exactly_one=False))[0]
@@ -65,11 +58,57 @@ def run():
           sale.lat = lat
           sale.lon = lon
           print (place,lat,lon)
+        
+      print "Saving..."
+      session.commit()   
+      
+    while 1:
+      listings = session.query(Listing).filter(Listing.address != None).filter(Listing.lat == None).filter(Listing.lon == None)[:100]
+      if not listings: break
+      for listing in listings:
+        try:
+          place, (lat, lon) = list(g.geocode(listing.address, exactly_one=False))[0]
+        except GQueryError as error:
+          print "Query Error"
+          print error
+          print listing.address
+          listing.lat = 0
+          listing.lon = 0
+        else:
+          listing.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) )
+          listing.lat = lat
+          listing.lon = lon
+          print (place,lat,lon)
+        
       print "Saving..."
       session.commit()   
   except GTooManyQueriesError:
     session.commit()
     print "Reached Maximum Google Requests"
+    
+  
+  print "Finding enclosing TCAD Parcels"
+  for listing in session.query(Listing).filter(Listing.tcad_2008_id == None).filter(Listing.geom != None).all():
+    q = session.query(TCAD_2008).filter(TCAD_2008.the_geom.covers(listing.geom.transform(2277)))
+    if q.count():
+      listing.tcad_2008_parcel = q.first()
+      print "$%s / $%s (%s)" % (listing.tcad_2008_parcel.marketvalu, listing.price, listing.address)
+  session.commit()
+
+  for sale in session.query(Sale).filter(Sale.tcad_2008_id == None).filter(Sale.geom != None).all():
+    q = session.query(TCAD_2008).filter(TCAD_2008.the_geom.covers(sale.geom.transform(2277)))
+    if q.count():
+      sale.tcad_2008_parcel = q.first()
+      print "$%s / $%s (%s)" % (sale.tcad_2008_parcel.marketvalu, sale.price, sale.address)
+  session.commit()
+  
+  for rental in session.query(Rental).filter(Rental.tcad_2008_id == None).filter(Rental.geom != None).all():
+    q = session.query(TCAD_2008).filter(TCAD_2008.the_geom.covers(rental.geom.transform(2277)))
+    if q.count():
+      rental.tcad_2008_parcel = q.first()
+      print "$%s / $%s (%s)" % (rental.tcad_2008_parcel.marketvalu, rental.price, rental.address)
+  session.commit()
+
 
 def help():
   print __doc__

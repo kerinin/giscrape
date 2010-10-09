@@ -12,6 +12,7 @@ from geoalchemy import *
 from numpy import *
 from pylab import *
 from matplotlib.ticker import *
+from matplotlib.scale import *
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from unum.units import *
@@ -21,6 +22,7 @@ from giscrape.orm import *
 
 _Functions = [
   'run',
+  'appraisal_accuracy',
   'cost_per_sf_vs_size',
   'age_vs_distance_scatter',
   'size_vs_distance_scatter',
@@ -65,6 +67,32 @@ def run():
 #median rent ratio by floor area (control for bed/bath? include bars?)
 #floor area vs age
 
+def appraisal_accuracy():
+  fig.suptitle("Ratio Distribution of Asking Price to TCAD Appraisal", fontsize=18, weight='bold')
+  session = Session()
+  
+  q = session.query(Listing).join(TCAD_2008).filter(TCAD_2008.marketvalu > 1000).filter(Listing.price > 1000)
+  
+  X = [ x.price / ( x.tcad_2008_parcel.marketvalu )  for x in q.all() ]
+  Y = [ x.price for x in q.all() ]
+  
+  ax = plt.subplot(111)
+  ax.hist(X,200,(0,2.5), color='g', edgecolor='g')
+  ax.grid(True)
+  for line in ax.get_ygridlines():
+    line.set_alpha(0)
+
+  ax2 = ax.twinx() 
+  ax2.hist(X,1000,(0,10), normed=True, histtype='step', cumulative=True, color='k')
+  ax2.grid(True)
+  ax2.axis([0,2.5,0,1])
+  #ax.set_xticks(np.arange(0,5,.5))
+  ax2.set_yticks(np.arange(0,1,.1))
+  #ax2.yaxis.set_major_formatter(mFormatter)
+  #ax2.xaxis.set_major_formatter(yFormatter)
+  
+  show()
+  
 def cost_per_sf_vs_size():
   fig.suptitle("Cost/SF vs Size", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
