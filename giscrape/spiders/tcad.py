@@ -32,8 +32,8 @@ class TcadSpider(CrawlSpider):
     parcel.add_value('url', response.url)
     parcel.add_xpath('parcel_id','//font[text()="Property ID Number:"]/../../td[3]/font/b/text()')
     parcel.add_xpath('owner','//td[text()="Owner\'s Name"]/../td[@class="reports_blacktxt"]/font/b/text()')
-    parcel.add_xpath('owner_address','//td[text()="Owner's Name"]/../../tr[2]/td[2]/text()')
-    parcel.add_xpath('address','//td[text()="Owner's Name"]/../../tr[3]/td[2]/text()')
+    parcel.add_xpath('owner_address','//td[text()="Owner\'s Name"]/../../tr[2]/td[2]/text()')
+    parcel.add_xpath('address','//td[text()="Owner\'s Name"]/../../tr[3]/td[2]/text()')
 
     parcel.add_xpath('land_value','//font[text()="Land Value"]/../../td[@class="reports_blacktxt"]/p/text()')
     parcel.add_xpath('improvement_value','//font[text()="Improvement Value"]/../../td[@class="reports_blacktxt"]/p/text()')
