@@ -67,6 +67,46 @@ def run():
 #median rent ratio by floor area (control for bed/bath? include bars?)
 #floor area vs age
 
+
+# TCAD '08 doesn't include the size of the structure
+def TCAD_improvement_cost_per_sf_vs_distance():
+  fig.suptitle("TCAD Cost/SF Distribution by Distance", fontsize=18, weight='bold')
+  shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
+  session = Session()
+  
+  contexts = session.query(Context).order_by(Context.geom.area)
+  boundary = session.query(Context).order_by(-Context.geom.area).first()
+  q = session.query(TCAD_2008).filter(TCAD_2008.contexts.any( id = boundary.id )).filter(TCAD_2008.the_geom != None).filter(TCAD_2008.improvemen != None).filter(Listing.size != None)
+  
+  trim = int(q.count()/50.0)
+  vmax = int( q.order_by(-Listing.price/Listing.size)[trim].price / q.order_by(-Listing.price/Listing.size)[trim].size)
+  vmin = int( q.order_by(Listing.price/Listing.size).first().price / q.order_by(Listing.price/Listing.size).first().size )
+  step = int( (vmax-vmin)/30.0 )
+  
+  X = arange(vmin, vmax, step)
+  
+  for i,context in enumerate( contexts.all() ):
+    
+    ax = plt.subplot(contexts.count(),1,i+1)
+    
+    qi = q.filter(Listing.contexts.any( id = context.id ))
+    
+    Y = array( [ qi.filter("listing.price / listing.size >= %s" % x).filter("listing.price / listing.size < %s" % (x + step)).count() for x in X ], dtype=float)
+    
+    ax.bar(X,Y, width=step, color='y', edgecolor='y')
+
+    ax.axis([vmin,vmax,0,None])
+    ax.set_ylabel(context.name.replace(' ','\n'), rotation=0)
+    
+    if not i+1 == contexts.count():
+      ax.xaxis.set_major_formatter(NullFormatter())
+    else:
+      ax.set_xlabel('Asking Price / SF ($/sf)')
+    
+    ax.grid(True)
+
+  show()
+  
 def appraisal_accuracy():
   fig.suptitle("Ratio Distribution of Asking Price to TCAD Appraisal", fontsize=18, weight='bold')
   session = Session()
