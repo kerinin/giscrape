@@ -172,10 +172,11 @@ class Context(Base):
     self.sales = []
     self.rentals = session.query(Sale).filter(Sale.geom != None).filter( Sale.geom.transform(2277).within(self.geom.transform(2277))).all()
     
-class TCAD_2008(Base):
+class TCAD(Base):
   __tablename__ = '2008 TCAD Parcels'
   __table_args__ = {'schema':'gis_schema'}
   
+  # COA GIS fields
   gid           = Column(Integer, primary_key=True)
   acreage       = Column(Float, nullable=True)
   roads         = Column(String, nullable=True)
@@ -194,7 +195,22 @@ class TCAD_2008(Base):
   value_per_acre= Column(Integer, nullable=True)
   the_geom      = GeometryColumn(Polygon(2, srid=2277 ))
   
-	
+class TCAD_2008(TCAD):
+  __tablename__ = '2008 TCAD Parcels'
+  __table_args__ = {'schema':'gis_schema'}  
+  __mapper_args__ = {'concrete':True}
+
+class TCAD_2010(TCAD):
+  __tablename__ = '2008 TCAD Parcels'
+  __table_args__ = {'schema':'gis_schema'}  
+  __mapper_args__ = {'concrete':True}
+
+  # Additional fields from TCAD scrape
+  url           = Column(String, nullable=True)
+  parcel_id     = Column(Integer, nullable=True)
+  address       = Column(String, nullable=True)
+  neighborhood  = Column(String, nullable=True)
+      	
 GeometryDDL(Listing.__table__)
 GeometryDDL(Rental.__table__)
 GeometryDDL(Sale.__table__)

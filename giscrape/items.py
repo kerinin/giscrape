@@ -3,7 +3,6 @@
 # See documentation in:
 # http://doc.scrapy.org/topics/items.html
 
-from scrapy.item import Item, Field
 
 class TCADParcelItem(Item):
   # define the fields for your item here like:
@@ -13,10 +12,10 @@ class TCADParcelItem(Item):
   address = Field()
   
   land_value = Field()
-  improvement_value = Field()
-  total_value = Field()
+  improvemen = Field()
+  marketvalu = Field()
   
-  land_acres = Field()
+  acreage = Field()
   neighborhood = Field()
   
   # Items

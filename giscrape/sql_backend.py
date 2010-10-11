@@ -11,9 +11,9 @@ import orm
 log.start()
 session = orm.Session()
 
-def upsert(model,values):
+def upsert(model,values,key):
 	try:
-		obj = session.query(model).find(model.url == values['url'])
+		obj = session.query(model).find(model.getattr(key) == values[key])
 		obj.update(**values)
 	except sqlalchemy.orm.exc.NoResultFound:
 		obj = model(**values)
@@ -34,12 +34,14 @@ class SQLBackend(object):
       
   def item_passed(self, item, spider, output):
     try:
-      if( isinstance(output, items.RentalItem) ):
+      if( isinstance(output, items.RentalItem, 'url') ):
         obj = upsert(orm.Rental, output )
-      elif( isinstance(output, items.SaleItem) ):
-        obj = upsert(orm.Sale, output )
-      elif( isinstance(output, items.ListingItem) ):
+      elif( isinstance(output, items.SaleItem, 'url') ):
         obj = upsert(orm.Listing, output )
+      elif( isinstance(output, items.ListingItem, 'url') ):
+        obj = upsert(orm.Listing, output )
+      elif( isinstance(output, items.TCADParcelItem, 'parcel_id') ):
+        obj = upsert(orm.TCAD_2010, output)
       else:
         raise orm.Fail, 'unknown data type'
     except orm.Fail:
