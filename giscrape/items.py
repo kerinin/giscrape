@@ -5,6 +5,47 @@
 
 from scrapy.item import Item, Field
 
+class TCADParcelItem(Item):
+  # define the fields for your item here like:
+  # name = Field()
+  url = Field()
+  parcel_id = Field()
+  address = Field()
+  
+  land_value = Field()
+  improvement_value = Field()
+  total_value = Field()
+  
+  land_acres = Field()
+  neighborhood = Field()
+  
+  # Items
+  improvements = Field()
+  segments = Field()
+  value_history = Field()
+  
+class TCADImprovementItem(Item):
+  improvement_id = Field()
+  
+  category = Field()
+  description = Field()
+  
+class TCADSegmentItem(Item):
+  improvement_id = Field()
+  segment_id = Field()
+  
+  type_code = Field()
+  description = Field()
+  klass = Field()
+  year_built = Field()
+  area = Field()
+  
+class TCADValueHistoryItem(Item):
+  parcel_id = Field()
+  
+  year = Field()
+  value = Field()
+  
 class RentalItem(Item):
   # define the fields for your item here like:
   # name = Field()
