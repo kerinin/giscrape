@@ -27,7 +27,7 @@ class TCADParcelItem(Item):
 class TCADImprovementItem(Item):
   improvement_id = Field()
   
-  category = Field()
+  state_category = Field()
   description = Field()
   
 class TCADSegmentItem(Item):
