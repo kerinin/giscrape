@@ -20,7 +20,7 @@ class TcadSpider(CrawlSpider):
   name = 'tcad'
   allowed_domains = ['http://www.traviscad.org/']
 
-  start_urls = []
+  start_urls = ['http://www.traviscad.org/travisdetail.php?theKey=187726&show_history=Y']
   
   rules = (
     Rule( customExtractor(),callback='parse_tcad' ),

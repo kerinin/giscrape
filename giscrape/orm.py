@@ -18,6 +18,10 @@ class Fail(StandardError):
   pass
      
 class Property(Base):
+  __tablename__ = 'property'
+  discriminator = Column('type', String(50)) 
+  __mapper_args__ = {'polymorphic_on': discriminator}
+    
   id = Column(Integer, primary_key=True)
   url = Column(String, index=True)
   address = Column(String)
@@ -26,18 +30,18 @@ class Property(Base):
   bathrooms =     Column(Float, nullable=True, index=True)
   powder_rooms =  Column(Integer, nullable=True, index=True) 
   property_type = Column(String, nullable=True)
-  size =          Column(Integer, nullable=True, index=True, extension = Number())
-  lot =           Column(Integer, nullable=True, extension = Lot())
+  size =          Column(Integer, nullable=True, index=True)
+  lot =           Column(Integer, nullable=True)
   year_built =    Column(Integer, nullable=True, index=True)
-  date_listed =   Column(Date, nullable=True, index=True, extension = Date())
+  date_listed =   Column(Date, nullable=True, index=True,)
   mls_id =        Column(String, nullable=True)
 
   descriptive_title = Column(String, nullable=True)
-  description =       Column(String, nullable=True, extension = Paragraph)
+  description =       Column(String, nullable=True)
 
-  additional_fields = Column(String, nullable=True, extension = Paragraph)
+  additional_fields = Column(String, nullable=True)
 
-  public_records =    Column(String, nullable=True, extension = Paragraph)
+  public_records =    Column(String, nullable=True)
 
   lat = Column(Float, nullable=True, index=True)
   lon = Column(Float, nullable=True, index=True)
@@ -45,7 +49,8 @@ class Property(Base):
 
   last_crawl = Column(DateTime)
 
-  tcad_2008_id = Column(Integer, ForeignKey('gis_schema.2008 TCAD Parcels.gid'))
+  #tcad_2008_id = Column(Integer, ForeignKey('gis_schema.2008 TCAD Parcels.gid'))
+  tcad_2008_id = Column(Integer, ForeignKey('2008 TCAD Parcels.gid'))
   tcad_2008_parcel = relationship("TCAD_2008", backref="rentals")  
   
   @validates('bedrooms', 'bathrooms', 'powder_rooms', 'property_type', 'size', 'lot', 'year_built', 'date_listed', 'mls_id')
@@ -59,7 +64,7 @@ class Property(Base):
       return None 
     elif re.search('(\d+) days ago'):
       return datetime.now() - timedelta( int( re.findall('(\d+) days ago', value)[0] ) )
-   else
+    else:
       return datetime.strptime(value.replace('st','').replace('nd','').replace('rd','').replace('th',''),'%b %d, %Y')
 
   @validates('size')
@@ -91,60 +96,79 @@ class Property(Base):
     
 class Rental(Property):
   __tablename__ = 'rental'
-  __table_args__ = {'schema':'gis_schema'}
-  __mapper_args__ = {'concrete':True}
-
+  #__table_args__ = {'schema':'gis_schema'}
+  __mapper_args__ = {'polymorphic_identity': 'rental'}
+  
+  id = Column(Integer, ForeignKey('property.id'), primary_key=True)
+  
   rent =          Column(Float, index=True)
   price_period =  Column(String, nullable=True)
   lease_term =    Column(String, nullable=True)
   pets_allowed =  Column(String, nullable=True)
 
   @validates('rent', 'price_period', 'lease_term', 'pets_allowed')
-  validate_not_dash
+  def rental_validate_not_dash(self, key, value):
+    return self.validate_not_dash(key,value)
   
   @validates('rent')
-  validate_cost
+  def rental_validate_cost(self,key,value):
+    return self.validate_cost(key,value)
     
 class Listing(Base):
   __tablename__ = 'listing'
-  __table_args__ = {'schema':'gis_schema'}
-  __mapper_args__ = {'concrete':True}
+  #__table_args__ = {'schema':'gis_schema'}
+  __mapper_args__ = {'polymorphic_identity': 'listing'}
 
-  price =         Column(Float, index=True)
-  sale_price = Column(Integer, nullable=True, index=True)
-  sale_date = Column(Date, nullable=True)
+  id = Column(Integer, ForeignKey('property.id'), primary_key=True)
+  
+  price       = Column(Float, index=True)
+  sale_price  = Column(Integer, nullable=True, index=True)
+  sale_date   = Column(Date, nullable=True)
   
   @validates('price', 'sale_price', 'sale_date')
-  validate_not_dash
+  def listing_validate_not_dash(self, key, value):
+    return self.validate_not_dash(key, value)
   
   @validates('price', 'sale_price')
-  validate_cost
+  def listing_validate_cost(self, key, value):
+    return self.validate_cost(key, value)
   
   @validates('sale_date')
-  validate_date
+  def listing_validate_date(self, key, value):
+    return self.validate_date(key, value)
   
   @validates('price_per_sf')
-  validate_number
+  def listing_validate_number(self, key, value):
+    return self.validate_number(key, value)
 
 context_listing = Table('context_listing', Base.metadata,
-    Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
-    Column('listing_id', Integer, ForeignKey('gis_schema.listing.id')),
-    schema = 'gis_schema', useexisting=True
+    #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
+    #Column('listing_id', Integer, ForeignKey('gis_schema.listing.id')),
+    Column('context_id', Integer, ForeignKey('context.id')),
+    Column('rental_id', Integer, ForeignKey('rental.id')),
+    #schema = 'gis_schema', 
+    useexisting=True
 )
 context_rental = Table('context_rental', Base.metadata,
-    Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
-    Column('rental_id', Integer, ForeignKey('gis_schema.rental.id')),
-    schema = 'gis_schema', useexisting=True
+    #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
+    #Column('rental_id', Integer, ForeignKey('gis_schema.rental.id')),
+    Column('context_id', Integer, ForeignKey('context.id')),
+    Column('rental_id', Integer, ForeignKey('rental.id')),
+    #schema = 'gis_schema', 
+    useexisting=True
 )
 context_sale = Table('context_sale', Base.metadata,
-    Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
-    Column('sale_id', Integer, ForeignKey('gis_schema.sale.id')),
-    schema = 'gis_schema', useexisting=True
+    #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
+    #Column('sale_id', Integer, ForeignKey('gis_schema.sale.id')),
+    Column('context_id', Integer, ForeignKey('context.id')),
+    Column('rental_id', Integer, ForeignKey('rental.id')),
+   # schema = 'gis_schema', 
+    useexisting=True
 )
 
 class Context(Base):
   __tablename__ = 'context'
-  __table_args__ = {'schema':'gis_schema'}
+  #__table_args__ = {'schema':'gis_schema'}
   
   id = Column(Integer, primary_key=True)
   
@@ -173,8 +197,10 @@ class Context(Base):
     self.rentals = session.query(Sale).filter(Sale.geom != None).filter( Sale.geom.transform(2277).within(self.geom.transform(2277))).all()
     
 class TCAD(Base):
-  __tablename__ = '2008 TCAD Parcels'
-  __table_args__ = {'schema':'gis_schema'}
+  __tablename__ = 'tcad'
+  #__table_args__ = {'schema':'gis_schema'}
+  discriminator = Column('type', String(50)) 
+  __mapper_args__ = {'polymorphic_on': discriminator}
   
   # COA GIS fields
   gid           = Column(Integer, primary_key=True)
@@ -197,13 +223,17 @@ class TCAD(Base):
   
 class TCAD_2008(TCAD):
   __tablename__ = '2008 TCAD Parcels'
-  __table_args__ = {'schema':'gis_schema'}  
-  __mapper_args__ = {'concrete':True}
+  #__table_args__ = {'schema':'gis_schema'}  
+  __mapper_args__ = {'polymorphic_identity': '2008'}
+  
+  gid = Column(Integer, ForeignKey('tcad.gid'), primary_key=True)
 
 class TCAD_2010(TCAD):
-  __tablename__ = '2008 TCAD Parcels'
-  __table_args__ = {'schema':'gis_schema'}  
-  __mapper_args__ = {'concrete':True}
+  __tablename__ = '2010 TCAD Parcels'
+  #__table_args__ = {'schema':'gis_schema'}  
+  __mapper_args__ = {'polymorphic_identity': '2010'}
+  
+  gid = Column(Integer, ForeignKey('tcad.gid'), primary_key=True)
 
   # Additional fields from TCAD scrape
   url           = Column(String, nullable=True)
@@ -211,7 +241,6 @@ class TCAD_2010(TCAD):
   address       = Column(String, nullable=True)
   neighborhood  = Column(String, nullable=True)
       	
-GeometryDDL(Listing.__table__)
-GeometryDDL(Rental.__table__)
-GeometryDDL(Sale.__table__)
+GeometryDDL(Property.__table__)
 GeometryDDL(Context.__table__)
+GeometryDDL(TCAD.__table__)

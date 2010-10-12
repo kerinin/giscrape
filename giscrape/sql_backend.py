@@ -27,7 +27,7 @@ class SQLBackend(object):
     dispatcher.connect(self.item_passed, signal=signals.item_passed)
       
   def engine_started(self):
-    orm.metadata.create_all(self.engine) 
+    orm.metadata.create_all() 
       
   def engine_stopped(self):
     pass
