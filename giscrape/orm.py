@@ -22,8 +22,8 @@ class Property(Base):
   discriminator = Column('type', String(50)) 
   __mapper_args__ = {'polymorphic_on': discriminator}
     
-  id = Column(Integer, primary_key=True)
-  url = Column(String, index=True)
+  #id = Column(Integer, primary_key=True)
+  url = Column(String, primary_key=True, index=True)
   address = Column(String)
 
   bedrooms =      Column(Integer, nullable=True, index=True)
@@ -53,6 +53,10 @@ class Property(Base):
   tcad_2008_id = Column(Integer, ForeignKey('2008 TCAD Parcels.gid'))
   tcad_2008_parcel = relationship("TCAD_2008", backref="rentals")  
   
+  @property
+  def identity(self):
+    return self.url
+    
   @validates('bedrooms', 'bathrooms', 'powder_rooms', 'property_type', 'size', 'lot', 'year_built', 'date_listed', 'mls_id')
   def validate_not_dash(self, key, value):
     if value == '\xe2': return None
@@ -92,20 +96,44 @@ class Property(Base):
     
   @validates('description', 'additional_fields', 'public_records')
   def validate_paragraph(self, key, value):
-    return value.concat() if isinstance(value, list) else value
+    return reduce(lambda x, y: x+y, value) if isinstance(value, list) else value
     
+context_listing = Table('context_listing', Base.metadata,
+    #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
+    #Column('listing_id', Integer, ForeignKey('gis_schema.listing.id')),
+    Column('context_id', Integer, ForeignKey('context.id')),
+    Column('rental_id', String, ForeignKey('rental.url')),
+    #schema = 'gis_schema', 
+    useexisting=True
+)
+context_rental = Table('context_rental', Base.metadata,
+    #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
+    #Column('rental_id', Integer, ForeignKey('gis_schema.rental.id')),
+    Column('context_id', Integer, ForeignKey('context.id')),
+    Column('rental_id', String, ForeignKey('rental.url')),
+    #schema = 'gis_schema', 
+    useexisting=True
+)
+
 class Rental(Property):
   __tablename__ = 'rental'
   #__table_args__ = {'schema':'gis_schema'}
   __mapper_args__ = {'polymorphic_identity': 'rental'}
   
-  id = Column(Integer, ForeignKey('property.id'), primary_key=True)
+  #id = Column(Integer, ForeignKey('property.id'), primary_key=True)
+  url = Column(String, ForeignKey('property.url'), primary_key=True)
   
   rent =          Column(Float, index=True)
   price_period =  Column(String, nullable=True)
   lease_term =    Column(String, nullable=True)
   pets_allowed =  Column(String, nullable=True)
 
+  #contexts = relationship("Context", secondary=context_rental)
+  
+  @property
+  def identity(self):
+    return self.url
+    
   @validates('rent', 'price_period', 'lease_term', 'pets_allowed')
   def rental_validate_not_dash(self, key, value):
     return self.validate_not_dash(key,value)
@@ -119,12 +147,19 @@ class Listing(Property):
   #__table_args__ = {'schema':'gis_schema'}
   __mapper_args__ = {'polymorphic_identity': 'listing'}
 
-  id = Column(Integer, ForeignKey('property.id'), primary_key=True)
+  #id = Column(Integer, ForeignKey('property.id'), primary_key=True)
+  url = Column(String, ForeignKey('property.url'), primary_key=True)
   
   price       = Column(Float, index=True)
   sale_price  = Column(Integer, nullable=True, index=True)
   sale_date   = Column(Date, nullable=True)
   
+  #contexts = relationship("Context", secondary=context_listing)  
+  
+  @property
+  def identity(self):
+    return self.id
+    
   @validates('price', 'sale_price', 'sale_date')
   def listing_validate_not_dash(self, key, value):
     return self.validate_not_dash(key, value)
@@ -141,23 +176,6 @@ class Listing(Property):
   def listing_validate_number(self, key, value):
     return self.validate_number(key, value)
 
-context_listing = Table('context_listing', Base.metadata,
-    #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
-    #Column('listing_id', Integer, ForeignKey('gis_schema.listing.id')),
-    Column('context_id', Integer, ForeignKey('context.id')),
-    Column('rental_id', Integer, ForeignKey('rental.id')),
-    #schema = 'gis_schema', 
-    useexisting=True
-)
-context_rental = Table('context_rental', Base.metadata,
-    #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
-    #Column('rental_id', Integer, ForeignKey('gis_schema.rental.id')),
-    Column('context_id', Integer, ForeignKey('context.id')),
-    Column('rental_id', Integer, ForeignKey('rental.id')),
-    #schema = 'gis_schema', 
-    useexisting=True
-)
-
 class Context(Base):
   __tablename__ = 'context'
   #__table_args__ = {'schema':'gis_schema'}
@@ -168,12 +186,8 @@ class Context(Base):
 
   geom = GeometryColumn(Polygon(2, srid=2277))
   
-  listings = relationship("Listing",
-                    secondary=context_listing,
-                    backref="contexts")
-  rentals = relationship("Rental",
-                    secondary=context_rental,
-                    backref="contexts")  
+  #listings = relationship("Listing", secondary=context_listing)
+  #rentals = relationship("Rental", secondary=context_rental)  
                     
   def cache_contents(self,session):
     self.listings = []
@@ -207,18 +221,22 @@ class TCAD_2008(Base):
   value_per_acre= Column(Integer, nullable=True)
   the_geom      = GeometryColumn(Polygon(2, srid=2277 ))
   
+  @property
+  def identity(self):
+    return self.gid
+    
 class TCAD_2010(Base):
-  __tablename__ = '2010 TCAD Parcels'
+  __tablename__ = '2010_TCAD_Parcels'
   #__table_args__ = {'schema':'gis_schema'}  
   __mapper_args__ = {'polymorphic_identity': '2010'}
   
-  gid       = Column(Integer, primary_key=True)
+  gid       = Column(Integer)
 
   objectid  = Column(Integer, nullable=True)
   area      = Column(Numeric, nullable=True)
   plat      = Column(String, nullable=True)
   pid_10    = Column(String, nullable=True)   #TCAD Ref
-  prop_id   = Column(Integer, nullable=True)  #TCAD ID
+  prop_id   = Column(Integer, primary_key=True, nullable=True)  #TCAD ID
   lots      = Column(String, nullable=True)
   situs     = Column(String, nullable=True)   #Address Number
   blocks    = Column(String, nullable=True)
@@ -245,25 +263,57 @@ class TCAD_2010(Base):
   market_value      = Column(Numeric, nullable=True)
   acreage           = Column(Float, nullable=True)
   neighborhood      = Column(String, nullable=True)
-      	
+  
+  improvements = relation("TCADImprovement", backref="parcel")
+  historical_values = relation("TCADValueHistory", backref="parcel")
+
+  @property
+  def identity(self):
+    return self.prop_id
+    
+  @validates('prop_id', 'land_value', 'improvement_value', 'market_value', 'acreage')
+  def validate_number(self, key, value):
+    if isinstance(value, list):
+      value = value[0]
+    if isinstance(value, str) or isinstance(value, unicode):
+      value = value.replace(',','').strip()
+    
+    return float( value )
+    
+  @validates('url', 'owner', 'neighborhood', 'address')
+  def validate_string(self, key, value):
+    if isinstance(value, list):
+      value = reduce(lambda x, y: x+y, value)
+    value = value.strip()
+    
+    return value
+    
+  @validates('owner_address')
+  def validate_paragraph(self, key, value):
+    if isinstance(value, list):
+      value = reduce(lambda x, y: x+y, value)
+    value = value.replace('\t', '').strip()
+    
+    return value
+    
 class TCADImprovement(Base):
   __tablename__ = 'TCAD_improvement'
   
   id = Column(Integer, primary_key=True)
 
-  parcel_id = Column(Integer, ForeignKey('2010 TCAD Parcels.gid'))
-  parcel = relationship("TCAD_2010", backref="improvements") 
+  parcel_id = Column(Integer, ForeignKey('2010_TCAD_Parcels.prop_id'))
     
   state_category    = Column(String, nullable=True)
   description       = Column(String, nullable=True)
+  
+  segments = relation("TCADSegment", backref="improvement")
   
 class TCADSegment(Base):
   __tablename__ = 'TCAD_segment'
   
   id = Column(Integer, primary_key=True)
   
-  improvement_id = Column(Integer, ForeignKey('TCAD_improvement.id'))
-  improvement = relationship("TCADImprovement", backref="segments")  
+  improvement_id = Column(Integer, ForeignKey('TCAD_improvement.id')) 
   
   type_code         = Column(String, nullable=True)
   description       = Column(String, nullable=True)
@@ -276,8 +326,7 @@ class TCADValueHistory(Base):
   
   id = Column(Integer, primary_key=True)
   
-  parcel_id = Column(Integer, ForeignKey('2010 TCAD Parcels.gid'))
-  parcel = relationship("TCADImprovement", backref="historical_values") 
+  parcel_id = Column(Integer, ForeignKey('2010_TCAD_Parcels.prop_id'))
   
   year              = Column(Integer, nullable=True)
   value             = Column(Numeric, nullable=True)
