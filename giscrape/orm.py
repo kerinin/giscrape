@@ -114,7 +114,7 @@ class Rental(Property):
   def rental_validate_cost(self,key,value):
     return self.validate_cost(key,value)
     
-class Listing(Base):
+class Listing(Property):
   __tablename__ = 'listing'
   #__table_args__ = {'schema':'gis_schema'}
   __mapper_args__ = {'polymorphic_identity': 'listing'}
@@ -157,14 +157,6 @@ context_rental = Table('context_rental', Base.metadata,
     #schema = 'gis_schema', 
     useexisting=True
 )
-context_sale = Table('context_sale', Base.metadata,
-    #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
-    #Column('sale_id', Integer, ForeignKey('gis_schema.sale.id')),
-    Column('context_id', Integer, ForeignKey('context.id')),
-    Column('rental_id', Integer, ForeignKey('rental.id')),
-   # schema = 'gis_schema', 
-    useexisting=True
-)
 
 class Context(Base):
   __tablename__ = 'context'
@@ -182,9 +174,6 @@ class Context(Base):
   rentals = relationship("Rental",
                     secondary=context_rental,
                     backref="contexts")  
-  sales = relationship("Sale",
-                    secondary=context_sale,
-                    backref="contexts") 
                     
   def cache_contents(self,session):
     self.listings = []
@@ -195,14 +184,11 @@ class Context(Base):
     
     self.sales = []
     self.rentals = session.query(Sale).filter(Sale.geom != None).filter( Sale.geom.transform(2277).within(self.geom.transform(2277))).all()
-    
-class TCAD(Base):
-  __tablename__ = 'tcad'
-  #__table_args__ = {'schema':'gis_schema'}
-  discriminator = Column('type', String(50)) 
-  __mapper_args__ = {'polymorphic_on': discriminator}
+
+class TCAD_2008(Base):
+  __tablename__ = '2008 TCAD Parcels'
+  #__table_args__ = {'schema':'gis_schema'}  
   
-  # COA GIS fields
   gid           = Column(Integer, primary_key=True)
   acreage       = Column(Float, nullable=True)
   roads         = Column(String, nullable=True)
@@ -221,26 +207,82 @@ class TCAD(Base):
   value_per_acre= Column(Integer, nullable=True)
   the_geom      = GeometryColumn(Polygon(2, srid=2277 ))
   
-class TCAD_2008(TCAD):
-  __tablename__ = '2008 TCAD Parcels'
-  #__table_args__ = {'schema':'gis_schema'}  
-  __mapper_args__ = {'polymorphic_identity': '2008'}
-  
-  gid = Column(Integer, ForeignKey('tcad.gid'), primary_key=True)
-
-class TCAD_2010(TCAD):
+class TCAD_2010(Base):
   __tablename__ = '2010 TCAD Parcels'
   #__table_args__ = {'schema':'gis_schema'}  
   __mapper_args__ = {'polymorphic_identity': '2010'}
   
-  gid = Column(Integer, ForeignKey('tcad.gid'), primary_key=True)
+  gid       = Column(Integer, primary_key=True)
+
+  objectid  = Column(Integer, nullable=True)
+  area      = Column(Numeric, nullable=True)
+  plat      = Column(String, nullable=True)
+  pid_10    = Column(String, nullable=True)   #TCAD Ref
+  prop_id   = Column(Integer, nullable=True)  #TCAD ID
+  lots      = Column(String, nullable=True)
+  situs     = Column(String, nullable=True)   #Address Number
+  blocks    = Column(String, nullable=True)
+  condoid   = Column(String, nullable=True)
+  condoid2  = Column(String, nullable=True)
+  parcel_blo= Column(String, nullable=True)
+  nbhd      = Column(String, nullable=True)
+  zoning    = Column(String, nullable=True)
+  land_value= Column(Numeric, nullable=True)
+  grid      = Column(String, nullable=True)
+  wcid17    = Column(String, nullable=True)
+  shape_area= Column(Numeric, nullable=True)
+  shape_len = Column(Numeric, nullable=True)
+  the_geom  = GeometryColumn(Polygon(2, srid=2277 ))
+  
 
   # Additional fields from TCAD scrape
-  url           = Column(String, nullable=True)
-  parcel_id     = Column(Integer, nullable=True)
-  address       = Column(String, nullable=True)
-  neighborhood  = Column(String, nullable=True)
+  url               = Column(String, nullable=True)
+
+  owner             = Column(String, nullable=True)
+  owner_address     = Column(String, nullable=True)
+  address           = Column(String, nullable=True)
+  improvement_value = Column(Numeric, nullable=True)
+  market_value      = Column(Numeric, nullable=True)
+  acreage           = Column(Float, nullable=True)
+  neighborhood      = Column(String, nullable=True)
       	
+class TCADImprovement(Base):
+  __tablename__ = 'TCAD_improvement'
+  
+  id = Column(Integer, primary_key=True)
+
+  parcel_id = Column(Integer, ForeignKey('2010 TCAD Parcels.gid'))
+  parcel = relationship("TCAD_2010", backref="improvements") 
+    
+  state_category    = Column(String, nullable=True)
+  description       = Column(String, nullable=True)
+  
+class TCADSegment(Base):
+  __tablename__ = 'TCAD_segment'
+  
+  id = Column(Integer, primary_key=True)
+  
+  improvement_id = Column(Integer, ForeignKey('TCAD_improvement.id'))
+  improvement = relationship("TCADImprovement", backref="segments")  
+  
+  type_code         = Column(String, nullable=True)
+  description       = Column(String, nullable=True)
+  klass             = Column(String, nullable=True)
+  year_built        = Column(Integer, nullable=True)
+  area              = Column(Integer, nullable=True)
+  
+class TCADValueHistory(Base):
+  __tablename__ = 'TCAD_value_history'
+  
+  id = Column(Integer, primary_key=True)
+  
+  parcel_id = Column(Integer, ForeignKey('2010 TCAD Parcels.gid'))
+  parcel = relationship("TCADImprovement", backref="historical_values") 
+  
+  year              = Column(Integer, nullable=True)
+  value             = Column(Numeric, nullable=True)
+  
 GeometryDDL(Property.__table__)
 GeometryDDL(Context.__table__)
-GeometryDDL(TCAD.__table__)
+GeometryDDL(TCAD_2008.__table__)
+GeometryDDL(TCAD_2010.__table__)

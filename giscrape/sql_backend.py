@@ -34,14 +34,14 @@ class SQLBackend(object):
       
   def item_passed(self, item, spider, output):
     try:
-      if( isinstance(output, items.RentalItem, 'url') ):
-        obj = upsert(orm.Rental, output )
-      elif( isinstance(output, items.SaleItem, 'url') ):
-        obj = upsert(orm.Listing, output )
-      elif( isinstance(output, items.ListingItem, 'url') ):
-        obj = upsert(orm.Listing, output )
-      elif( isinstance(output, items.TCADParcelItem, 'parcel_id') ):
-        obj = upsert(orm.TCAD_2010, output)
+      if( isinstance(output, items.RentalItem) ):
+        obj = upsert(orm.Rental, output, 'url' )
+      elif( isinstance(output, items.SaleItem) ):
+        obj = upsert(orm.Listing, output, 'url' )
+      elif( isinstance(output, items.ListingItem) ):
+        obj = upsert(orm.Listing, output, 'url' )
+      elif( isinstance(output, items.TCADParcelItem) ):
+        obj = upsert(orm.TCAD_2010, output, 'parcel_id')
       else:
         raise orm.Fail, 'unknown data type'
     except orm.Fail:

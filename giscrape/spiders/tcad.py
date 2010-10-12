@@ -6,6 +6,7 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.loader import XPathItemLoader
 from giscrape.items import *
 from scrapy.item import Item, Field
+from scrapy.spider import BaseSpider
 from scrapy import log
 from giscrape.orm import *
 
@@ -16,34 +17,30 @@ class customExtractor(SgmlLinkExtractor):
     response.body = response.body.replace('\\','')
     return SgmlLinkExtractor.extract_links(self,response)
     
-class TcadSpider(CrawlSpider):
+class TcadSpider(BaseSpider):
   name = 'tcad'
   allowed_domains = ['http://www.traviscad.org/']
 
   start_urls = ['http://www.traviscad.org/travisdetail.php?theKey=187726&show_history=Y']
   
-  rules = (
-    Rule( customExtractor(),callback='parse_tcad' ),
-  )
-  
-  def parse_tcad(self, response):
+  def parse(self, response):
     parcel = XPathItemLoader(item=TCADParcelItem(), response=response)
 
     parcel.add_value('url', response.url)
-    parcel.add_xpath('parcel_id','//font[text()="Property ID Number:"]/../../td[3]/font/b/text()')
+    parcel.add_xpath('prop_id','//font[text()="Property ID Number:"]/../../td[3]/font/b/text()')
     parcel.add_xpath('owner','//td[text()="Owner\'s Name"]/../td[@class="reports_blacktxt"]/font/b/text()')
     parcel.add_xpath('owner_address','//td[text()="Owner\'s Name"]/../../tr[2]/td[2]/text()')
     parcel.add_xpath('address','//td[text()="Owner\'s Name"]/../../tr[3]/td[2]/text()')
 
     parcel.add_xpath('land_value','//font[text()="Land Value"]/../../td[@class="reports_blacktxt"]/p/text()')
     parcel.add_xpath('improvement_value','//font[text()="Improvement Value"]/../../td[@class="reports_blacktxt"]/p/text()')
-    parcel.add_xpath('total_value','//font[text()="Total Value"]/../../td[@class="reports_blacktxt"]/p/text()') 
+    parcel.add_xpath('market_value','//font[text()="Total Value"]/../../td[@class="reports_blacktxt"]/p/text()') 
     
-    parcel.add_xpath('land_acres','//font[text()="Land Acres"]/../../td[@class="reports_blacktxt"]/p/text()')   
+    parcel.add_xpath('acreage','//font[text()="Land Acres"]/../../td[@class="reports_blacktxt"]/p/text()')   
     parcel.add_xpath('neighborhood','//font[text()="Neighborhood Code"]/../../td[@class="reports_blacktxt"]/text()')
     
     def improvement(response):
-      i = XpathItemLoader(item=TCADImprovementItem(), response=response)
+      i = XPathItemLoader(item=TCADImprovementItem(), response=response)
       
       i.add_xpath('improvement_id', '//td[1]/text()')
       i.add_xpath('state_category', '//td[2]/text()')
@@ -52,7 +49,7 @@ class TcadSpider(CrawlSpider):
       return i.load_item()
       
     def segment(response):
-      s = XpathItemLoader(item=TCADSegmentItem(), response=response)
+      s = XPathItemLoader(item=TCADSegmentItem(), response=response)
       
       s.add_xpath('improvement_id', '//td[1]/text()')
       s.add_xpath('segment_id', '//td[2]/text()')
@@ -77,16 +74,16 @@ class TcadSpider(CrawlSpider):
       return h.load_item()
       
     hxs = HtmlXPathSelector(response)
-    parcel.add_value('improvements', map(improvement, improvement in hxs.select('//font[text()="Improvement ID"]/../../../../tr[position()>1]').extract() ) )
-    parcel.add_value('segments', map(improvement, improvement in hxs.select('//font[text()="Imp ID"]/../../../../tr[position()>1 and position()<last()]').extract() ) )
-    parcel.add_value(
-      'value_history', 
-      map(
-        improvement, 
-        hxs.select(
-          '//td[text()="Certified Value History"]/../../../../table[2]/tbody/tr/td[@colspan="5"]/following::tr[1]'
-        ).extract() 
-      ) 
-    )      
+    #parcel.add_value('improvements', map(improvement, hxs.select('//font[text()="Improvement ID"]/../../../../tr[position()>1]').extract() ) )
+    #parcel.add_value('segments', map(improvement, hxs.select('//font[text()="Imp ID"]/../../../../tr[position()>1 and position()<last()]').extract() ) )
+    #parcel.add_value(
+    #  'value_history', 
+    #  map(
+    #    improvement, 
+    #    hxs.select(
+    #      '//td[text()="Certified Value History"]/../../../../table[2]/tbody/tr/td[@colspan="5"]/following::tr[1]'
+    #    ).extract() 
+    #  ) 
+    #)      
 
-    return l.load_item()
+    return parcel.load_item()

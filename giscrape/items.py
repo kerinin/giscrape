@@ -8,12 +8,14 @@ class TCADParcelItem(Item):
   # define the fields for your item here like:
   # name = Field()
   url = Field()
-  parcel_id = Field()
+  prop_id = Field()
+  owner = Field()
+  owner_address = Field()
   address = Field()
   
   land_value = Field()
-  improvemen = Field()
-  marketvalu = Field()
+  improvement_value = Field()
+  market_value = Field()
   
   acreage = Field()
   neighborhood = Field()
@@ -24,14 +26,15 @@ class TCADParcelItem(Item):
   value_history = Field()
   
 class TCADImprovementItem(Item):
-  improvement_id = Field()
+  id = Field()
+  parcel_id = Field()
   
   state_category = Field()
   description = Field()
   
 class TCADSegmentItem(Item):
+  id = Field()
   improvement_id = Field()
-  segment_id = Field()
   
   type_code = Field()
   description = Field()
@@ -40,6 +43,7 @@ class TCADSegmentItem(Item):
   area = Field()
   
 class TCADValueHistoryItem(Item):
+  id = Field()
   parcel_id = Field()
   
   year = Field()
