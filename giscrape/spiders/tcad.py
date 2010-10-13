@@ -82,7 +82,6 @@ class TcadSpider(BaseSpider):
       'improvements', 
       map( improvement, values, [response.url,] * len(values) ) 
     )
-    #parcel.add_value('segments', map(improvement, hxs.select('//font[text()="Imp ID"]/../../../../tr[position()>1 and position()<last()]').extract() ) )  
 
     values = hxs.select('//font[text()="Imp ID"]/../../../../tr[position()>1 and position()<last()]').extract()
     parcel.add_value(

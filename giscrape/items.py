@@ -5,8 +5,6 @@
 from scrapy.item import Item, Field
 
 class TCADParcelItem(Item):
-  # define the fields for your item here like:
-  # name = Field()
   url = Field()
   prop_id = Field()
   owner = Field()
@@ -46,8 +44,6 @@ class TCADValueHistoryItem(Item):
   value = Field()
   
 class RentalItem(Item):
-  # define the fields for your item here like:
-  # name = Field()
   url = Field()
   address = Field()
   

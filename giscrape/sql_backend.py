@@ -59,8 +59,6 @@ class SQLBackend(object):
     else:
       obj.last_crawl = datetime.now()
 
-      #map(session.merge, obj.improvements)
       session.merge(obj)
-      #session.add( obj )
       session.commit()
       
