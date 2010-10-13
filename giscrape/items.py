@@ -23,7 +23,7 @@ class TCADParcelItem(Item):
   # Items
   improvements = Field()
   segments = Field()
-  value_history = Field()
+  historical_values = Field()
   
 class TCADImprovementItem(Item):
   id = Field()

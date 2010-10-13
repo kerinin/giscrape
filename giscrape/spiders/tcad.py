@@ -5,10 +5,12 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor, BaseSgmlLinkEx
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.loader import XPathItemLoader
 from giscrape.items import *
+
 from scrapy.item import Item, Field
 from scrapy.spider import BaseSpider
-from scrapy import log
+from scrapy import *
 from giscrape.orm import *
+
 
 log.start()
 
@@ -21,7 +23,8 @@ class TcadSpider(BaseSpider):
   name = 'tcad'
   allowed_domains = ['http://www.traviscad.org/']
 
-  start_urls = ['http://www.traviscad.org/travisdetail.php?theKey=187726&show_history=Y']
+  session = Session()
+  start_urls = ['http://www.traviscad.org/travisdetail.php?theKey=%s&show_history=Y' % x[0] for x in session.query(TCAD_2010.prop_id).all()]
   
   def parse(self, response):
     parcel = XPathItemLoader(item=TCADParcelItem(), response=response)
@@ -39,10 +42,11 @@ class TcadSpider(BaseSpider):
     parcel.add_xpath('acreage','//font[text()="Land Acres"]/../../td[@class="reports_blacktxt"]/p/text()')   
     parcel.add_xpath('neighborhood','//font[text()="Neighborhood Code"]/../../td[@class="reports_blacktxt"]/text()')
     
-    def improvement(response):
+    def improvement(text, url):
+      response = http.TextResponse(url=url, body=str(text))
       i = XPathItemLoader(item=TCADImprovementItem(), response=response)
       
-      i.add_xpath('improvement_id', '//td[1]/text()')
+      i.add_xpath('id', '//td[1]/text()')
       i.add_xpath('state_category', '//td[2]/text()')
       i.add_xpath('description', '//td[3]/text()')
       
@@ -61,7 +65,8 @@ class TcadSpider(BaseSpider):
       
       return s.load_item()
       
-    def history(response):
+    def history(text, url):
+      response = http.TextResponse(url=url, body=str(text))
       h = XpathItemLoader(item=TCADValueHistoryItem(), response=response)
       
       h.add_xpath('land_id', '//td[1]/text()')
@@ -74,16 +79,17 @@ class TcadSpider(BaseSpider):
       return h.load_item()
       
     hxs = HtmlXPathSelector(response)
-    #parcel.add_value('improvements', map(improvement, hxs.select('//font[text()="Improvement ID"]/../../../../tr[position()>1]').extract() ) )
-    #parcel.add_value('segments', map(improvement, hxs.select('//font[text()="Imp ID"]/../../../../tr[position()>1 and position()<last()]').extract() ) )
+    improvements = hxs.select('//font[text()="Improvement ID"]/../../../../tr[position()>1]').extract()
+    parcel.add_value(
+      'improvements', 
+      map( improvement, improvements, [response.url,] * len(improvements) ) 
+    )
+    #parcel.add_value('segments', map(improvement, hxs.select('//font[text()="Imp ID"]/../../../../tr[position()>1 and position()<last()]').extract() ) )  
+
+    #improvements = hxs.select('//td[text()="Certified Value History"]/../../../../table[2]/tbody/tr/td[@colspan="5"]/following::tr[1]').extract()
     #parcel.add_value(
-    #  'value_history', 
-    #  map(
-    #    improvement, 
-    #    hxs.select(
-    #      '//td[text()="Certified Value History"]/../../../../table[2]/tbody/tr/td[@colspan="5"]/following::tr[1]'
-    #    ).extract() 
-    #  ) 
-    #)      
+    #  'historical_values', 
+    #  map( improvement, improvements, [response.url,] * len(improvements) ) 
+    #)
 
     return parcel.load_item()

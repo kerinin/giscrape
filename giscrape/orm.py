@@ -226,7 +226,7 @@ class TCAD_2008(Base):
     return self.gid
     
 class TCAD_2010(Base):
-  __tablename__ = '2010_TCAD_Parcels'
+  __tablename__ = '2010 TCAD Parcels'
   #__table_args__ = {'schema':'gis_schema'}  
   __mapper_args__ = {'polymorphic_identity': '2010'}
   
@@ -295,19 +295,43 @@ class TCAD_2010(Base):
     value = value.replace('\t', '').strip()
     
     return value
+
+  #@validates('improvements')
+  #def validate_improvements(self, key, value):
+  #  if isinstance(value, list) and not isinstance(value, TCADImprovement):
+  #    value = [TCADImprovement(**x) for x in value]
+  #  
+  #  return value
     
 class TCADImprovement(Base):
   __tablename__ = 'TCAD_improvement'
   
   id = Column(Integer, primary_key=True)
 
-  parcel_id = Column(Integer, ForeignKey('2010_TCAD_Parcels.prop_id'))
+  parcel_id = Column(Integer, ForeignKey('2010 TCAD Parcels.prop_id'))
     
   state_category    = Column(String, nullable=True)
   description       = Column(String, nullable=True)
   
   segments = relation("TCADSegment", backref="improvement")
   
+  @validates('id', 'parcel_id')
+  def validate_number(self, key, value):
+    if isinstance(value, list):
+      value = value[0]
+    if isinstance(value, str) or isinstance(value, unicode):
+      value = value.replace(',','').strip()
+    
+    return float( value )
+    
+  @validates('state_category', 'description')
+  def validate_string(self, key, value):
+    if isinstance(value, list):
+      value = reduce(lambda x, y: x+y, value)
+    value = value.strip()
+    
+    return value
+    
 class TCADSegment(Base):
   __tablename__ = 'TCAD_segment'
   
@@ -326,7 +350,7 @@ class TCADValueHistory(Base):
   
   id = Column(Integer, primary_key=True)
   
-  parcel_id = Column(Integer, ForeignKey('2010_TCAD_Parcels.prop_id'))
+  parcel_id = Column(Integer, ForeignKey('2010 TCAD Parcels.prop_id'))
   
   year              = Column(Integer, nullable=True)
   value             = Column(Numeric, nullable=True)
