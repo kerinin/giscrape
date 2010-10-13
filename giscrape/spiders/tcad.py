@@ -53,11 +53,12 @@ class TcadSpider(BaseSpider):
       
       return i.load_item()
       
-    def segment(response):
+    def segment(text, url):
+      response = http.TextResponse(url=url, body=str(text.replace(u'\xa0','')))
       s = XPathItemLoader(item=TCADSegmentItem(), response=response)
       
       s.add_xpath('improvement_id', '//td[1]/text()')
-      s.add_xpath('segment_id', '//td[2]/text()')
+      s.add_xpath('id', '//td[2]/text()')
       s.add_xpath('type_code', '//td[3]/text()')
       s.add_xpath('description', '//td[4]/text()')
       s.add_xpath('klass', '//td[5]/text()')
@@ -76,16 +77,20 @@ class TcadSpider(BaseSpider):
       return h.load_item()
       
     hxs = HtmlXPathSelector(response)
-    improvements = hxs.select('//font[text()="Improvement ID"]/../../../../tr[position()>1]').extract()
+    values = hxs.select('//font[text()="Improvement ID"]/../../../../tr[position()>1]').extract()
     parcel.add_value(
       'improvements', 
-      map( improvement, improvements, [response.url,] * len(improvements) ) 
+      map( improvement, values, [response.url,] * len(values) ) 
     )
     #parcel.add_value('segments', map(improvement, hxs.select('//font[text()="Imp ID"]/../../../../tr[position()>1 and position()<last()]').extract() ) )  
 
+    values = hxs.select('//font[text()="Imp ID"]/../../../../tr[position()>1 and position()<last()]').extract()
+    parcel.add_value(
+      'segments', 
+      map( segment, values, [response.url,] * len(values) ) 
+    )
+    
     values = hxs.select('//td[text()="Certified Value History"]/../../../..//td[@colspan="5"]/following::tr[1]').extract()
-    print 'VALUES-----'
-    print values
     parcel.add_value(
       'historical_values', 
       map( history, values, [response.url,] * len(values) ) 

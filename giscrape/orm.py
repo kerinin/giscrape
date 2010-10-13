@@ -345,6 +345,24 @@ class TCADSegment(Base):
   year_built        = Column(Integer, nullable=True)
   area              = Column(Integer, nullable=True)
   
+  @validates('type_code', 'description', 'klass')
+  def validate_string(self, key, value):
+    if isinstance(value, list):
+      value = reduce(lambda x, y: x+y, value)
+    value = value.strip()
+    
+    return value
+    
+  @validates('id','improvement_id','year_built', 'area')
+  def validate_number(self, key, value):
+    cache = value
+    if isinstance(value, list):
+      value = value[0]
+    if isinstance(value, str) or isinstance(value, unicode):
+      value = value.replace(',','').strip()
+    
+    return float( value ) if value else None
+    
 class TCADValueHistory(Base):
   __tablename__ = 'TCAD_value_history'
   
