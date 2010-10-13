@@ -27,7 +27,6 @@ class TCADParcelItem(Item):
   
 class TCADImprovementItem(Item):
   id = Field()
-  parcel_id = Field()
   
   state_category = Field()
   description = Field()
@@ -43,9 +42,6 @@ class TCADSegmentItem(Item):
   area = Field()
   
 class TCADValueHistoryItem(Item):
-  id = Field()
-  parcel_id = Field()
-  
   year = Field()
   value = Field()
   

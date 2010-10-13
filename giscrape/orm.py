@@ -355,6 +355,15 @@ class TCADValueHistory(Base):
   year              = Column(Integer, nullable=True)
   value             = Column(Numeric, nullable=True)
   
+  @validates('year', 'value')
+  def validate_number(self, key, value):
+    if isinstance(value, list):
+      value = value[0]
+    if isinstance(value, str) or isinstance(value, unicode):
+      value = value.replace(',','').strip()
+    
+    return float( value )
+    
 GeometryDDL(Property.__table__)
 GeometryDDL(Context.__table__)
 GeometryDDL(TCAD_2008.__table__)

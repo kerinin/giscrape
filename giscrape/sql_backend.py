@@ -33,16 +33,17 @@ class SQLBackend(object):
       elif( isinstance(output, items.ListingItem) ):
         obj =  orm.Listing(**output)
       elif( isinstance(output, items.TCADParcelItem) ):
-        print output
+      
         improvements = output['improvements']
-        #historical_values = output['historical_values']
+        historical_values = output['historical_values']
+
         del(output['improvements'])
-        #del(output['historical_values'])
+        del(output['historical_values'])
         
         obj = orm.TCAD_2010(**output)
         
-        #for i in historical_values:
-        #  orm.TCADValueHistory(parcel = obj, **i)
+        for i in historical_values:
+          orm.TCADValueHistory(parcel = obj, **i)
         for i in improvements:
           orm.TCADImprovement(parcel = obj, **i)
       else:

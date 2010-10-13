@@ -27,6 +27,7 @@ class TcadSpider(BaseSpider):
   start_urls = ['http://www.traviscad.org/travisdetail.php?theKey=%s&show_history=Y' % x[0] for x in session.query(TCAD_2010.prop_id).all()]
   
   def parse(self, response):
+    response.body = response.body.replace('\\','').replace('\xa0','')
     parcel = XPathItemLoader(item=TCADParcelItem(), response=response)
 
     parcel.add_value('url', response.url)
@@ -66,15 +67,11 @@ class TcadSpider(BaseSpider):
       return s.load_item()
       
     def history(text, url):
-      response = http.TextResponse(url=url, body=str(text))
-      h = XpathItemLoader(item=TCADValueHistoryItem(), response=response)
+      response = http.TextResponse(url=url, body=str(text.replace(u'\xa0','')))
+      h = XPathItemLoader(item=TCADValueHistoryItem(), response=response)
       
-      h.add_xpath('land_id', '//td[1]/text()')
-      h.add_xpath('year_built', '//td[2]/text()')
-      h.add_xpath('year_built', '//td[3]/text()')
-      h.add_xpath('year_built', '//td[4]/text()')
-      h.add_xpath('year_built', '//td[5]/text()')
-      h.add_xpath('year_built', '//td[6]/text()')
+      h.add_xpath('year', '//td[1]/text()')
+      h.add_xpath('value', '//td[4]/text()')
       
       return h.load_item()
       
@@ -86,10 +83,12 @@ class TcadSpider(BaseSpider):
     )
     #parcel.add_value('segments', map(improvement, hxs.select('//font[text()="Imp ID"]/../../../../tr[position()>1 and position()<last()]').extract() ) )  
 
-    #improvements = hxs.select('//td[text()="Certified Value History"]/../../../../table[2]/tbody/tr/td[@colspan="5"]/following::tr[1]').extract()
-    #parcel.add_value(
-    #  'historical_values', 
-    #  map( improvement, improvements, [response.url,] * len(improvements) ) 
-    #)
+    values = hxs.select('//td[text()="Certified Value History"]/../../../..//td[@colspan="5"]/following::tr[1]').extract()
+    print 'VALUES-----'
+    print values
+    parcel.add_value(
+      'historical_values', 
+      map( history, values, [response.url,] * len(values) ) 
+    )
 
     return parcel.load_item()
