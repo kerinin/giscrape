@@ -50,7 +50,7 @@ class Property(Base):
   last_crawl = Column(DateTime)
 
   #tcad_2008_id = Column(Integer, ForeignKey('gis_schema.2008 TCAD Parcels.gid'))
-  tcad_2008_id = Column(Integer, ForeignKey('2008 TCAD Parcels.gid'))
+  tcad_2008_id = Column(Integer, ForeignKey('gis_schema.2008 TCAD Parcels.gid'))
   tcad_2008_parcel = relationship("TCAD_2008", backref="rentals")  
   
   @property
@@ -178,7 +178,7 @@ class Listing(Property):
 
 class Context(Base):
   __tablename__ = 'context'
-  #__table_args__ = {'schema':'gis_schema'}
+  __table_args__ = {'schema':'gis_schema'}
   
   id = Column(Integer, primary_key=True)
   
@@ -201,7 +201,7 @@ class Context(Base):
 
 class TCAD_2008(Base):
   __tablename__ = '2008 TCAD Parcels'
-  #__table_args__ = {'schema':'gis_schema'}  
+  __table_args__ = {'schema':'gis_schema'}  
   
   gid           = Column(Integer, primary_key=True)
   acreage       = Column(Float, nullable=True)
@@ -227,8 +227,7 @@ class TCAD_2008(Base):
     
 class TCAD_2010(Base):
   __tablename__ = '2010 TCAD Parcels'
-  #__table_args__ = {'schema':'gis_schema'}  
-  __mapper_args__ = {'polymorphic_identity': '2010'}
+  __table_args__ = {'schema':'gis_schema'}  
   
   gid       = Column(Integer)
 
@@ -278,7 +277,7 @@ class TCAD_2010(Base):
     if isinstance(value, str) or isinstance(value, unicode):
       value = value.replace(',','').strip()
     
-    return float( value )
+    return float( value ) if value else None
     
   @validates('url', 'owner', 'neighborhood', 'address')
   def validate_string(self, key, value):
@@ -305,10 +304,11 @@ class TCAD_2010(Base):
     
 class TCADImprovement(Base):
   __tablename__ = 'TCAD_improvement'
+  __table_args__ = {'schema':'gis_schema'}
   
   id = Column(Integer, primary_key=True)
 
-  parcel_id = Column(Integer, ForeignKey('2010 TCAD Parcels.prop_id'))
+  parcel_id = Column(Integer, ForeignKey('gis_schema.2010 TCAD Parcels.prop_id'))
     
   state_category    = Column(String, nullable=True)
   description       = Column(String, nullable=True)
@@ -322,7 +322,7 @@ class TCADImprovement(Base):
     if isinstance(value, str) or isinstance(value, unicode):
       value = value.replace(',','').strip()
     
-    return float( value )
+    return float( value ) if value else None
     
   @validates('state_category', 'description')
   def validate_string(self, key, value):
@@ -334,10 +334,11 @@ class TCADImprovement(Base):
     
 class TCADSegment(Base):
   __tablename__ = 'TCAD_segment'
+  __table_args__ = {'schema':'gis_schema'}
   
   id = Column(Integer, primary_key=True)
   
-  improvement_id = Column(Integer, ForeignKey('TCAD_improvement.id')) 
+  improvement_id = Column(Integer, ForeignKey('gis_schema.TCAD_improvement.id')) 
   
   type_code         = Column(String, nullable=True)
   description       = Column(String, nullable=True)
@@ -365,10 +366,11 @@ class TCADSegment(Base):
     
 class TCADValueHistory(Base):
   __tablename__ = 'TCAD_value_history'
+  __table_args__ = {'schema':'gis_schema'}
   
   id = Column(Integer, primary_key=True)
   
-  parcel_id = Column(Integer, ForeignKey('2010 TCAD Parcels.prop_id'))
+  parcel_id = Column(Integer, ForeignKey('gis_schema.2010 TCAD Parcels.prop_id'))
   
   year              = Column(Integer, nullable=True)
   value             = Column(Numeric, nullable=True)

@@ -9,7 +9,6 @@ import items
 import orm
 
 log.start()
-session = orm.Session()
 	
 class SQLBackend(object):
   
@@ -25,6 +24,7 @@ class SQLBackend(object):
     pass
       
   def item_passed(self, item, spider, output):
+    session = orm.Session()
     try:
       if( isinstance(output, items.RentalItem) ):
         obj =  orm.Rental(**output)
@@ -34,21 +34,31 @@ class SQLBackend(object):
         obj =  orm.Listing(**output)
       elif( isinstance(output, items.TCADParcelItem) ):
       
-        improvements = output['improvements']
-        segments = output['segments']
+        try:
+          improvements = output['improvements']
+          del(output['improvements'])
+          
+          for i in improvements:
+            imp = orm.TCADImprovement(parcel_id = output['prop_id'], **i)
+            session.merge( imp ) 
+        except KeyError:
+          print "No Improvements Found"
+          
+        try:
+          segments = output['segments']
+          del(output['segments'])
+          
+          for i in segments:
+            seg = orm.TCADSegment(**i)
+            session.merge( seg )
+        except KeyError:
+          print "No Segments Found"   
+                    
         historical_values = output['historical_values']
-
-        del(output['improvements'])
-        del(output['segments'])
         del(output['historical_values'])
         
         obj = orm.TCAD_2010(**output)
-      
-        for i in improvements:
-          orm.TCADImprovement(parcel = obj, **i)
-        for i in segments:
-          seg = orm.TCADSegment(**i)
-          session.merge( seg )       
+
         for i in historical_values:
           orm.TCADValueHistory(parcel = obj, **i)
 
