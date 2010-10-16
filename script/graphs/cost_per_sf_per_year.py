@@ -31,12 +31,12 @@ def main(argv=None):
   region = s.query(Context).get(4)
 
   X = range(1980, 2010)
-  All = array( [ s.query(TCADSegment).filter( TCADSegment.year_built == x ).value(func.sum(TCADSegment.area)) for x in X ], dtype=float )
+  #All = array( [ s.query(TCADSegment).filter( TCADSegment.year_built == x ).value(func.sum(TCADSegment.area)) for x in X ], dtype=float )
   East = array( [ s.query(TCADSegment).join(TCADSegment.improvement).join(TCADImprovement.parcel).filter(TCAD_2010.the_geom.within(region.geom)).filter(TCADSegment.year_built == x).value(func.sum(TCADSegment.area)) for x in X ], dtype=float )
              
   ax = plt.subplot(111)
   p1=ax.bar(X,East/1e+6, width=.8, color='k', edgecolor='w', align='center')
-  p2=ax.bar(X,(All-East)/1e+6, width=.8, color='.5', edgecolor='w', align='center', bottom=East/1e+6)
+  p2=ax.bar(X,(All-East)/1e+6, width=.8, color='.25', edgecolor='w', align='center', bottom=East/1e+6)
   
   ax.set_ylabel("Built Area (million sf)")
   ax.set_xlabel("Year")

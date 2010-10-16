@@ -7,7 +7,7 @@ from sqlalchemy.orm import *
 from sqlalchemy.orm.interfaces import *
 from geoalchemy import *
 
-engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb')
+engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=False)
 metadata = MetaData(engine)
 Base = declarative_base(metadata=metadata)
 Session = sessionmaker(bind=engine)
@@ -262,6 +262,7 @@ class TCAD_2010(Base):
   market_value      = Column(Numeric, nullable=True)
   acreage           = Column(Float, nullable=True)
   neighborhood      = Column(String, nullable=True)
+  improvement_area  = Column(Numeric, nullable=True)
   
   improvements = relation("TCADImprovement", backref="parcel")
   historical_values = relation("TCADValueHistory", backref="parcel")
@@ -270,7 +271,7 @@ class TCAD_2010(Base):
   def identity(self):
     return self.prop_id
     
-  @validates('prop_id', 'land_value', 'improvement_value', 'market_value', 'acreage')
+  @validates('prop_id', 'land_value', 'improvement_value', 'market_value', 'acreage', 'improvement_area')
   def validate_number(self, key, value):
     if isinstance(value, list):
       value = value[0]
@@ -374,6 +375,8 @@ class TCADValueHistory(Base):
   
   year              = Column(Integer, nullable=True)
   value             = Column(Numeric, nullable=True)
+  area              = Column(Numeric, nullable=True)
+  new_construction  = Column(Boolean, nullable=True)
   
   @validates('year', 'value')
   def validate_number(self, key, value):

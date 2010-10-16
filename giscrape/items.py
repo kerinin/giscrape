@@ -18,6 +18,8 @@ class TCADParcelItem(Item):
   acreage = Field()
   neighborhood = Field()
   
+  improvement_area = Field()
+  
   # Items
   improvements = Field()
   segments = Field()

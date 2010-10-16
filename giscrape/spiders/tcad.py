@@ -46,6 +46,8 @@ class TcadSpider(BaseSpider):
     parcel.add_xpath('acreage','//font[text()="Land Acres"]/../../td[@class="reports_blacktxt"]/p/text()')   
     parcel.add_xpath('neighborhood','//font[text()="Neighborhood Code"]/../../td[@class="reports_blacktxt"]/text()')
     
+    parcel.add_xpath('improvement_area', '//font[text()="Total Living Area"]/../../td[2]//b/text()')
+    
     def improvement(text, url):
       response = http.TextResponse(url=url, body=str(text))
       i = XPathItemLoader(item=TCADImprovementItem(), response=response)
