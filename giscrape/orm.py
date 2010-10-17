@@ -98,22 +98,22 @@ class Property(Base):
   def validate_paragraph(self, key, value):
     return reduce(lambda x, y: x+y, value) if isinstance(value, list) else value
     
-context_listing = Table('context_listing', Base.metadata,
+#context_listing = Table('context_listing', Base.metadata,
     #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
     #Column('listing_id', Integer, ForeignKey('gis_schema.listing.id')),
-    Column('context_id', Integer, ForeignKey('context.id')),
-    Column('rental_id', String, ForeignKey('rental.url')),
+#    Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
+#    Column('listing_id', String, ForeignKey('gis_schema.listing.url')),
     #schema = 'gis_schema', 
-    useexisting=True
-)
-context_rental = Table('context_rental', Base.metadata,
+#    useexisting=True
+#)
+#context_rental = Table('context_rental', Base.metadata,
     #Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
     #Column('rental_id', Integer, ForeignKey('gis_schema.rental.id')),
-    Column('context_id', Integer, ForeignKey('context.id')),
-    Column('rental_id', String, ForeignKey('rental.url')),
+#    Column('context_id', Integer, ForeignKey('gis_schema.context.id')),
+#    Column('rental_id', String, ForeignKey('gis_schema.rental.url')),
     #schema = 'gis_schema', 
-    useexisting=True
-)
+#    useexisting=True
+#)
 
 class Rental(Property):
   __tablename__ = 'rental'
@@ -423,7 +423,25 @@ class TravelTimePoint(Base):
   speed_limit       = Column(Integer, nullable=True, index=True)
   redundant_checked = Column(Boolean, default=False)
   
+  radius_100        = Column(Boolean, default=None, nullable=True)
+  radius_1000       = Column(Boolean, default=None, nullable=True)
+  radius_5000       = Column(Boolean, default=None, nullable=True)
+
   geom              = GeometryColumn(Point(2, srid=2277))
+  
+  times             = relation("TravelTime", backref='destination', cascade="all, delete, delete-orphan")
+  
+class TravelTime(Base):
+  __tablename__ = 'travel_time'
+  __table_args__ = {'schema':'gis_schema'}
+  
+  id               = Column(Integer, primary_key=True)
+  
+  duration      = Column(Integer)   # Travel time from origin to destination in minutes
+  mode          = Column(String)
+  origin        = Column(String)
+  destination_id= Column(Integer, ForeignKey('gis_schema.travel_distance.id'))
+  
   
 GeometryDDL(Property.__table__)
 GeometryDDL(Context.__table__)
