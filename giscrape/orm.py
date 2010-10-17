@@ -45,7 +45,7 @@ class Property(Base):
 
   lat = Column(Float, nullable=True, index=True)
   lon = Column(Float, nullable=True, index=True)
-  geom = GeometryColumn(Point(2), nullable=True)
+  geom = GeometryColumn(Point(2,2277), nullable=True)
 
   last_crawl = Column(DateTime)
 
@@ -377,6 +377,7 @@ class TCADValueHistory(Base):
   value             = Column(Numeric, nullable=True)
   area              = Column(Numeric, nullable=True)
   new_construction  = Column(Boolean, nullable=True)
+  new_checked       = Column(Boolean, nullable=True)
   
   @validates('year', 'value')
   def validate_number(self, key, value):

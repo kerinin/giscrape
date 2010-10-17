@@ -34,7 +34,7 @@ def run():
           print error
           print text
         else:
-          rental.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) )
+          rental.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) ).transform(2277)
           rental.lat = lat
           rental.lon = lon
           print (place,lat,lon)
@@ -54,7 +54,7 @@ def run():
           sale.lat = 0
           sale.lon = 0
         else:
-          sale.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) )
+          sale.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) ).transform(2277)
           sale.lat = lat
           sale.lon = lon
           print (place,lat,lon)
@@ -75,7 +75,7 @@ def run():
           listing.lat = 0
           listing.lon = 0
         else:
-          listing.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) )
+          listing.geom = WKTSpatialElement("POINT(%s %s)" % (lon, lat) ).transform(2277)
           listing.lat = lat
           listing.lon = lon
           print (place,lat,lon)
