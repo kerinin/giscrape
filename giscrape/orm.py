@@ -388,6 +388,43 @@ class TCADValueHistory(Base):
     
     return float( value )
     
+class TravelTimePoint(Base):
+  __tablename__ = 'travel_distance'
+  __table_args__ = {'schema':'gis_schema'}
+  
+  id               = Column(Integer, primary_key=True)
+  
+  pointnum          = Column(String, nullable=True)
+  accumdst          = Column(Numeric, nullable=True)
+  #gid               = Column(Numeric, nullable=True)
+  prefix_dir        = Column(String, nullable=True)
+  pre_type          = Column(String, nullable=True)
+  street_nam        = Column(String, nullable=True)
+  street_typ        = Column(String, nullable=True)
+  suffix_dir        = Column(String, nullable=True)
+  full_stree        = Column(String, nullable=True)
+  map_grid          = Column(String, nullable=True)
+  built_date        = Column(String, nullable=True)
+  modified_u        = Column(String, nullable=True)
+  modified_d        = Column(String, nullable=True)
+  elevation_        = Column(Numeric, nullable=True)
+  elevation1        = Column(Numeric, nullable=True)
+  miles             = Column(Numeric, nullable=True)
+  seconds           = Column(Numeric, nullable=True)
+  one_way           = Column(String, nullable=True)
+  action_cod        = Column(String, nullable=True)
+  input_date        = Column(String, nullable=True)
+  input_uid         = Column(String, nullable=True)
+  pre_dir           = Column(String, nullable=True)
+  str_name          = Column(String, nullable=True)
+  full_name         = Column(String, nullable=True)
+  suf_dir           = Column(String, nullable=True)
+  shape_len         = Column(Numeric, nullable=True)
+  speed_limit       = Column(Integer, nullable=True, index=True)
+  redundant_checked = Column(Boolean, default=False)
+  
+  geom              = GeometryColumn(Point(2, srid=2277))
+  
 GeometryDDL(Property.__table__)
 GeometryDDL(Context.__table__)
 GeometryDDL(TCAD_2008.__table__)
