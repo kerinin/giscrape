@@ -46,7 +46,7 @@ def main(argv=None):
     LAT = '30.250421899999999'
     LON = '-97.699009500000003'
     ORIGIN = "Shady Lane"
-    MODE = "walking"
+    MODE = "driving"
     
     s=Session()
     q=s.query(TravelTimePoint).filter(TravelTimePoint.radius_5000 == True).filter( not_( TravelTimePoint.times.any( TravelTime.origin==ORIGIN ) ) ).filter( not_( TravelTimePoint.times.any( TravelTime.mode==MODE ) ) )

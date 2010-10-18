@@ -27,7 +27,7 @@ class TcadSpider(BaseSpider):
   session = Session()
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   
-  start_urls = ['http://www.traviscad.org/travisdetail.php?theKey=%s&show_history=Y' % x[0] for x in session.query(TCAD_2010.prop_id).filter(TCAD_2010.market_value == None).filter(TCAD_2010.prop_id > 0).order_by(TCAD_2010.the_geom.centroid().distance(shady.transform(2277)))[:30000] ]
+  start_urls = ['http://www.traviscad.org/travisdetail.php?theKey=%s&show_history=Y' % x[0] for x in session.query(TCAD_2010.prop_id).filter(TCAD_2010.market_value == None).filter(TCAD_2010.prop_id > 0).order_by(TCAD_2010.the_geom.centroid().distance(shady.transform(2277)))[:10000] ]
   
   def parse(self, response):
     response.body = response.body.replace('\\','').replace('\xa0','')
