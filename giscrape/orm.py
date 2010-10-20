@@ -231,11 +231,11 @@ class TCAD_2010(Base):
   
   gid       = Column(Integer)
 
-  objectid  = Column(Integer, nullable=True)
+  objectid  = Column(Integer, primary_key=True, nullable=True)
   area      = Column(Numeric, nullable=True)
   plat      = Column(String, nullable=True)
   pid_10    = Column(String, nullable=True)   #TCAD Ref
-  prop_id   = Column(Integer, primary_key=True, nullable=True)  #TCAD ID
+  prop_id   = Column(Integer, nullable=True)  #TCAD ID
   lots      = Column(String, nullable=True)
   situs     = Column(String, nullable=True)   #Address Number
   blocks    = Column(String, nullable=True)
@@ -271,7 +271,7 @@ class TCAD_2010(Base):
   def identity(self):
     return self.prop_id
     
-  @validates('prop_id', 'land_value', 'improvement_value', 'market_value', 'acreage', 'improvement_area')
+  @validates('prop_id', 'objectid', 'land_value', 'improvement_value', 'market_value', 'acreage', 'improvement_area')
   def validate_number(self, key, value):
     if isinstance(value, list):
       value = value[0]
@@ -309,7 +309,7 @@ class TCADImprovement(Base):
   
   id = Column(Integer, primary_key=True)
 
-  parcel_id = Column(Integer, ForeignKey('gis_schema.2010 TCAD Parcels.prop_id'))
+  parcel_id = Column(Integer, ForeignKey('gis_schema.2010 TCAD Parcels.objectid'))
     
   state_category    = Column(String, nullable=True)
   description       = Column(String, nullable=True)
@@ -371,7 +371,7 @@ class TCADValueHistory(Base):
   
   id = Column(Integer, primary_key=True)
   
-  parcel_id = Column(Integer, ForeignKey('gis_schema.2010 TCAD Parcels.prop_id'))
+  parcel_id = Column(Integer, ForeignKey('gis_schema.2010 TCAD Parcels.objectid'))
   
   year              = Column(Integer, nullable=True)
   value             = Column(Numeric, nullable=True)

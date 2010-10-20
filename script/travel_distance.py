@@ -12,7 +12,7 @@ lat = None
 lon = None
 
 from giscrape.googlemaps import *
-gmaps = GoogleMaps()
+gmaps = GoogleMaps('ABQIAAAAxBYO1IaeRmbM-69cgm4FNxTOoCsxsJIZtfDnfwGVFTuk5s_7vhTNDQwxRTn-UxHFgGD1WfSxQP6nrQ')
 
 def help():
   print "python travel_distance.py [all|car|bike|walk] --lat=<latitude> --lon=<longitude>"
@@ -47,32 +47,38 @@ def main(argv=None):
     LON = '-97.699009500000003'
     ORIGIN = "Shady Lane"
     MODE = "driving"
+    RADIUS = TravelTimePoint.radius_5000
+    ORIGIN_POINT = WKTSpatialElement("POINT(%s %s)" % (LON, LAT) )
     
     s=Session()
-    q=s.query(TravelTimePoint).filter(TravelTimePoint.radius_5000 == True).filter( not_( TravelTimePoint.times.any( TravelTime.origin==ORIGIN ) ) ).filter( not_( TravelTimePoint.times.any( TravelTime.mode==MODE ) ) )
-    while q.count():
-      for destination in q[:100]:
-        s.query(TravelTime).filter(TravelTime.origin==ORIGIN).filter(TravelTime.mode==MODE).filter(TravelTime.destination_id == destination.id).delete()
+    q=s.query(TravelTimePoint).filter(RADIUS == True).filter( not_( TravelTimePoint.times.any( TravelTime.origin==ORIGIN ) ) ).filter( not_( TravelTimePoint.times.any( TravelTime.mode==MODE ) ) ).order_by(TravelTimePoint.geom.distance(ORIGIN_POINT.transform(2277)))
+    try:
+      while q.count():
+        for destination in q[:100]:
+          s.query(TravelTime).filter(TravelTime.origin==ORIGIN).filter(TravelTime.mode==MODE).filter(TravelTime.destination_id == destination.id).delete()
 
-        dlat = s.scalar(destination.geom.transform(4326).y)
-        dlon = s.scalar(destination.geom.transform(4326).x)
-        directions = gmaps.directions('%s,%s' % (LAT, LON),'%s,%s' % (dlat,dlon), mode=MODE)
+          dlat = s.scalar(destination.geom.transform(4326).y)
+          dlon = s.scalar(destination.geom.transform(4326).x)
+          directions = gmaps.directions('%s,%s' % (LAT, LON),'%s,%s' % (dlat,dlon), mode=MODE)
 
-        time = TravelTime( 
-          origin=ORIGIN, 
-          destination = destination, 
-          mode=MODE, 
-          duration = int(directions['routes'][0]['legs'][0]['duration']['value'])/60
-        )
-        
-        s.add(time)
+          time = TravelTime( 
+            origin=ORIGIN, 
+            destination = destination, 
+            mode=MODE, 
+            duration = int(directions['routes'][0]['legs'][0]['duration']['value'])/60
+          )
+          
+          s.add(time)
 
-        print "Dest: %s, %s, duration: %s minutes" % (dlat, dlon, time.duration)
-        for t in destination.times:
-          print t.id
-        
+          print "Dest: %s, %s, duration: %s minutes" % (dlat, dlon, time.duration)
+          for t in destination.times:
+            print t.id
+          
+        s.commit()
+        print "Committed... %s remaining" % q.count()
+    except GoogleMapsError as err:
       s.commit()
-      print "Committed... %s remaining" % q.count()
+      print "Reached max requests and committed (%s)" % err
       
   except Usage, err:
     print >>sys.stderr, err.msg
