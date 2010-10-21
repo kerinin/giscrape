@@ -19,3 +19,7 @@ DEFAULT_ITEM_CLASS = 'giscrape.items.GiscrapeItem'
 USER_AGENT = '%s/%s' % (BOT_NAME, BOT_VERSION)
 
 EXTENSIONS = {'giscrape.sql_backend.SQLBackend':500}
+
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 543,
+}

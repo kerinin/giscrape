@@ -12,7 +12,7 @@ lat = None
 lon = None
 
 from giscrape.googlemaps import *
-gmaps = GoogleMaps('ABQIAAAAxBYO1IaeRmbM-69cgm4FNxTOoCsxsJIZtfDnfwGVFTuk5s_7vhTNDQwxRTn-UxHFgGD1WfSxQP6nrQ')
+gmaps = GoogleMaps()
 
 def help():
   print "python travel_distance.py [all|car|bike|walk] --lat=<latitude> --lon=<longitude>"
@@ -46,8 +46,8 @@ def main(argv=None):
     LAT = '30.250421899999999'
     LON = '-97.699009500000003'
     ORIGIN = "Shady Lane"
-    MODE = "driving"
-    RADIUS = TravelTimePoint.radius_5000
+    MODE = "biking"
+    RADIUS = TravelTimePoint.radius_1000
     ORIGIN_POINT = WKTSpatialElement("POINT(%s %s)" % (LON, LAT) )
     
     s=Session()
@@ -55,24 +55,30 @@ def main(argv=None):
     try:
       while q.count():
         for destination in q[:100]:
-          s.query(TravelTime).filter(TravelTime.origin==ORIGIN).filter(TravelTime.mode==MODE).filter(TravelTime.destination_id == destination.id).delete()
+          try:
+            s.query(TravelTime).filter(TravelTime.origin==ORIGIN).filter(TravelTime.mode==MODE).filter(TravelTime.destination_id == destination.id).delete()
 
-          dlat = s.scalar(destination.geom.transform(4326).y)
-          dlon = s.scalar(destination.geom.transform(4326).x)
-          directions = gmaps.directions('%s,%s' % (LAT, LON),'%s,%s' % (dlat,dlon), mode=MODE)
+            dlat = s.scalar(destination.geom.transform(4326).y)
+            dlon = s.scalar(destination.geom.transform(4326).x)
+            directions = gmaps.directions('%s,%s' % (LAT, LON),'%s,%s' % (dlat,dlon), mode=MODE)
 
-          time = TravelTime( 
-            origin=ORIGIN, 
-            destination = destination, 
-            mode=MODE, 
-            duration = int(directions['routes'][0]['legs'][0]['duration']['value'])/60
-          )
-          
-          s.add(time)
+            time = TravelTime( 
+              origin=ORIGIN, 
+              destination = destination, 
+              mode=MODE, 
+              duration = int(directions['routes'][0]['legs'][0]['duration']['value'])/60
+            )
+            
+            s.add(time)
 
-          print "Dest: %s, %s, duration: %s minutes" % (dlat, dlon, time.duration)
-          for t in destination.times:
-            print t.id
+            print "Dest: %s, %s, duration: %s minutes" % (dlat, dlon, time.duration)
+            for t in destination.times:
+              print t.id
+          except GoogleMapsError as err:
+            if "ZERO_RESULTS" in err:
+              print "zero results..."
+            else:
+              raise
           
         s.commit()
         print "Committed... %s remaining" % q.count()
