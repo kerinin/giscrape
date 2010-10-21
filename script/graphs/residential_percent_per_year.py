@@ -33,17 +33,19 @@ def main(argv=None):
 
   X = range(1980, 2010)
   All = array( [ q.filter( TCADSegment.year_built == x ).value(func.sum(TCADSegment.area)) for x in X ], dtype=float )
+  All_norm = array( [ q.filter( TCADSegment.year_built <= x ).value(func.sum(TCADSegment.area)) for x in X ], dtype=float )
   East = array( [ q.join(TCADImprovement.parcel).filter(TCAD_2010.the_geom.within(region.geom)).filter(TCADSegment.year_built == x).value(func.sum(TCADSegment.area)) for x in X ], dtype=float )
+  East_norm = array( [ q.join(TCADImprovement.parcel).filter(TCAD_2010.the_geom.within(region.geom)).filter(TCADSegment.year_built <= x).value(func.sum(TCADSegment.area)) for x in X ], dtype=float )
              
   ax = plt.subplot(111)
-  p1=ax.bar(X,East/1e+6, width=.8, color='k', edgecolor='w', align='center')
-  p2=ax.bar(X,(All-East)/1e+6, width=.8, color='.25', edgecolor='w', align='center', bottom=East/1e+6)
+  p1=ax.plot(X,100 * East/East_norm, color='k', lw=2)
+  p2=ax.plot(X,100 * All/All_norm, color='.25', ls="--")
   
-  ax.set_ylabel("Built Area (million sf)")
+  ax.set_ylabel("Increase in Built Area (%)")
   ax.set_xlabel("Year")
   ax.grid(True)
-  ax.axis([1980,2010,0,None])
-  #ax.legend([p2,p1],['East Side', 'Austin'])
+  ax.axis([1980,2010,0,5])
+  ax.legend([p2,p1],['All Austin','East Side'], loc='upper left')
     
   show()
 
