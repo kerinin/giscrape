@@ -19,17 +19,19 @@ class Fail(StandardError):
      
 class Property(Base):
   __tablename__ = 'property'
-  discriminator = Column('type', String(50)) 
+  __table_args__ = {'schema':'gis_schema'}
+  
+  discriminator = Column('type', String(50), index=True) 
   __mapper_args__ = {'polymorphic_on': discriminator}
     
-  #id = Column(Integer, primary_key=True)
-  url = Column(String, primary_key=True, index=True)
+  id = Column(Integer, primary_key=True, index=True)
+  url = Column(String, index=True)
   address = Column(String)
 
   bedrooms =      Column(Integer, nullable=True, index=True)
   bathrooms =     Column(Float, nullable=True, index=True)
   powder_rooms =  Column(Integer, nullable=True, index=True) 
-  property_type = Column(String, nullable=True)
+  property_type = Column(String, nullable=True, index=True)
   size =          Column(Integer, nullable=True, index=True)
   lot =           Column(Integer, nullable=True)
   year_built =    Column(Integer, nullable=True, index=True)
@@ -117,11 +119,10 @@ class Property(Base):
 
 class Rental(Property):
   __tablename__ = 'rental'
-  #__table_args__ = {'schema':'gis_schema'}
+  __table_args__ = {'schema':'gis_schema'}
   __mapper_args__ = {'polymorphic_identity': 'rental'}
   
-  #id = Column(Integer, ForeignKey('property.id'), primary_key=True)
-  url = Column(String, ForeignKey('property.url'), primary_key=True)
+  id = Column(Integer, ForeignKey('gis_schema.property.id'), primary_key=True)
   
   rent =          Column(Float, index=True)
   price_period =  Column(String, nullable=True)
@@ -144,11 +145,10 @@ class Rental(Property):
     
 class Listing(Property):
   __tablename__ = 'listing'
-  #__table_args__ = {'schema':'gis_schema'}
+  __table_args__ = {'schema':'gis_schema'}
   __mapper_args__ = {'polymorphic_identity': 'listing'}
 
-  #id = Column(Integer, ForeignKey('property.id'), primary_key=True)
-  url = Column(String, ForeignKey('property.url'), primary_key=True)
+  id = Column(Integer, ForeignKey('gis_schema.property.id'), primary_key=True, index=True)
   
   price       = Column(Float, index=True)
   sale_price  = Column(Integer, nullable=True, index=True)

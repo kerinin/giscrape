@@ -25,10 +25,10 @@ def main(argv=None):
 
   fig = plt.figure()
   
-  fig.suptitle("Residential Building Activity by Year", fontsize=18, weight='bold')
+  fig.suptitle("Residential Growth by Year", fontsize=18, weight='bold')
   s = Session()
   
-  region = s.query(Context).get(4)
+  region = s.query(Context).get(3)
   q = s.query(TCADSegment).join(TCADSegment.improvement).filter(TCADImprovement.description.in_(['FOURPLEX','APARTMENT 100+','CONDO (STACKED)','APARTMENT 50-100', '1 FAM DWELLING', '2 FAM DWELLING', '1/2 DUPLEX', 'APARTMENT 5-25', 'APARTMENT 26-49']))
 
   X = range(1980, 2010)
@@ -39,9 +39,9 @@ def main(argv=None):
              
   ax = plt.subplot(111)
   p1=ax.plot(X,100 * East/East_norm, color='k', lw=2)
-  p2=ax.plot(X,100 * All/All_norm, color='.25', ls="--")
+  p2=ax.plot(X,100 * All/All_norm, color='.75', ls="--")
   
-  ax.set_ylabel("Increase in Built Area (%)")
+  ax.set_ylabel("Growth in Square Feet (%)")
   ax.set_xlabel("Year")
   ax.grid(True)
   ax.axis([1980,2010,0,5])

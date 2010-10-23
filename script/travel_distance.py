@@ -15,7 +15,7 @@ from giscrape.googlemaps import *
 gmaps = GoogleMaps()
 
 def help():
-  print "python travel_distance.py [all|car|bike|walk] --lat=<latitude> --lon=<longitude>"
+  print "python travel_distance.py [all|driving|bicycling|walking] --lat=<latitude> --lon=<longitude>"
   print __doc__
   return 0
 	
@@ -46,12 +46,12 @@ def main(argv=None):
     LAT = '30.250421899999999'
     LON = '-97.699009500000003'
     ORIGIN = "Shady Lane"
-    MODE = "biking"
+    MODE = "bicycling"
     RADIUS = TravelTimePoint.radius_1000
     ORIGIN_POINT = WKTSpatialElement("POINT(%s %s)" % (LON, LAT) )
     
     s=Session()
-    q=s.query(TravelTimePoint).filter(RADIUS == True).filter( not_( TravelTimePoint.times.any( TravelTime.origin==ORIGIN ) ) ).filter( not_( TravelTimePoint.times.any( TravelTime.mode==MODE ) ) ).order_by(TravelTimePoint.geom.distance(ORIGIN_POINT.transform(2277)))
+    q=s.query(TravelTimePoint).filter(RADIUS == True).filter( not_( TravelTimePoint.times.any( and_( TravelTime.origin==ORIGIN, TravelTime.mode==MODE) ) ) ).order_by(TravelTimePoint.geom.distance(ORIGIN_POINT.transform(2277)))
     try:
       while q.count():
         for destination in q[:100]:

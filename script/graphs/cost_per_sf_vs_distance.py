@@ -1,7 +1,7 @@
 #! /usr/bin/env python
-
-import sys, getopt, math, datetime, os
+import sys, getopt, math, os, time
 import locale
+sys.path.append( os.path.dirname(sys.argv[0])+'/../../' )
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import mapper, sessionmaker
@@ -21,8 +21,9 @@ from giscrape import orm
 from giscrape.orm import *
 
 def main(argv=None):
-
-  fig = plt.figure()
+  metadata.create_all()
+  
+  fig = plt.figure(figsize=(10.5,7.5))
   
   fig.suptitle("Cost/SF Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
@@ -30,7 +31,9 @@ def main(argv=None):
   
   contexts = session.query(Context).order_by(Context.geom.area)
   boundary = session.query(Context).order_by(-Context.geom.area).first()
-  q = session.query(Listing).filter(Listing.contexts.any( id = boundary.id )).filter(Listing.geom != None).filter(Listing.price != None).filter(Listing.size != None)
+  #q = session.query(Listing).filter(Listing.contexts.any( id = boundary.id )).filter(Listing.geom != None).filter(Listing.price != None).filter(Listing.size != None)
+  q = session.query(Listing).filter(Listing.geom.within(boundary.geom)).filter(Listing.geom != None).filter(Listing.price != None).filter(Listing.size != None)
+  
   
   trim = int(q.count()/50.0)
   vmax = int( q.order_by(-Listing.price/Listing.size)[trim].price / q.order_by(-Listing.price/Listing.size)[trim].size)
@@ -43,11 +46,12 @@ def main(argv=None):
     
     ax = plt.subplot(contexts.count(),1,i+1)
     
-    qi = q.filter(Listing.contexts.any( id = context.id ))
+    #qi = q.filter(Listing.contexts.any( id = context.id ))
+    qi = q.filter(Listing.geom.within(context.geom))
     
     Y = array( [ qi.filter("listing.price / listing.size >= %s" % x).filter("listing.price / listing.size < %s" % (x + step)).count() for x in X ], dtype=float)
     
-    ax.bar(X,Y, width=step, color='y', edgecolor='y')
+    ax.bar(X,Y, width=step, color='k', edgecolor='w')
 
     ax.axis([vmin,vmax,0,None])
     ax.set_ylabel(context.name.replace(' ','\n'), rotation=0)

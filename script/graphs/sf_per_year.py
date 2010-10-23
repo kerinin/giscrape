@@ -25,10 +25,10 @@ def main(argv=None):
 
   fig = plt.figure()
   
-  fig.suptitle("Residential Building Activity by Year", fontsize=18, weight='bold')
+  fig.suptitle("Residential Growth by Year", fontsize=18, weight='bold')
   s = Session()
   
-  region = s.query(Context).get(4)
+  region = s.query(Context).get(3)
   q = s.query(TCADSegment).join(TCADSegment.improvement).filter(TCADImprovement.description.in_(['FOURPLEX','APARTMENT 100+','CONDO (STACKED)','APARTMENT 50-100', '1 FAM DWELLING', '2 FAM DWELLING', '1/2 DUPLEX', 'APARTMENT 5-25', 'APARTMENT 26-49']))
 
   X = range(1980, 2010)
@@ -37,13 +37,13 @@ def main(argv=None):
              
   ax = plt.subplot(111)
   p1=ax.bar(X,East/1e+6, width=.8, color='k', edgecolor='w', align='center')
-  p2=ax.bar(X,(All-East)/1e+6, width=.8, color='.25', edgecolor='w', align='center', bottom=East/1e+6)
+  p2=ax.bar(X,(All-East)/1e+6, width=.8, color='.75', edgecolor='w', align='center', bottom=East/1e+6)
   
-  ax.set_ylabel("Built Area (million sf)")
+  ax.set_ylabel("Growth (million sf)")
   ax.set_xlabel("Year")
   ax.grid(True)
   ax.axis([1980,2010,0,None])
-  #ax.legend([p2,p1],['East Side', 'Austin'])
+  ax.legend([p1[0],p2[0]],['East Side', 'All Austin'], loc='upper left')
     
   show()
 
