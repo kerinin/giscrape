@@ -21,11 +21,14 @@ from unum.units import *
 from giscrape import orm
 from giscrape.orm import *
 
+import matplotlib as mpl
+mpl.rcParams['font.size'] = 8
+
 def main(argv=None):
 
-  fig = plt.figure()
+  fig = plt.figure(figsize=(3,2.5))
   
-  fig.suptitle("Residential Growth by Year", fontsize=18, weight='bold')
+  #fig.suptitle("Residential Growth by Year", fontsize=18, weight='bold')
   s = Session()
   
   region = s.query(Context).get(3)
@@ -38,8 +41,9 @@ def main(argv=None):
   East_norm = array( [ q.join(TCADImprovement.parcel).filter(TCAD_2010.the_geom.within(region.geom)).filter(TCADSegment.year_built <= x).value(func.sum(TCADSegment.area)) for x in X ], dtype=float )
              
   ax = plt.subplot(111)
+  p2=ax.plot(X,100 * All/All_norm, color='.75')
   p1=ax.plot(X,100 * East/East_norm, color='k', lw=2)
-  p2=ax.plot(X,100 * All/All_norm, color='.75', ls="--")
+  
   
   ax.set_ylabel("Growth in Square Feet (%)")
   ax.set_xlabel("Year")
@@ -47,6 +51,8 @@ def main(argv=None):
   ax.axis([1980,2010,0,5])
   ax.legend([p2,p1],['All Austin','East Side'], loc='upper left')
     
+  plt.subplots_adjust(right=.93, top=.95, bottom=.15, left=.15)
+  
   show()
 
 if __name__ == "__main__":

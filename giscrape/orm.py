@@ -17,6 +17,7 @@ DefaultDialect = engine.dialect
 class Fail(StandardError):
   pass
      
+  
 class Property(Base):
   __tablename__ = 'property'
   __table_args__ = {'schema':'gis_schema'}
@@ -225,6 +226,48 @@ class TCAD_2008(Base):
   def identity(self):
     return self.gid
     
+
+class Person(Base):
+  __tablename__ = 'person'
+  __table_args__ = {'schema':'gis_schema'}
+  
+  id = Column(Integer, primary_key=True)
+  
+  first_name = Column(String, nullable=True)
+  middle_name = Column(String, nullable=True)
+  last_name = Column(String, nullable=True)
+  city = Column(String, nullable=True)
+  state = Column(String, nullable=True)
+  zipcode = Column(String, nullable=True)
+  
+  cities = Column(String, nullable=True)
+  birth_year = Column(Integer, nullable=True)
+  job_title = Column(String, nullable=True)
+  employer = Column(String, nullable=True)
+  
+  owned_properties = relation("TCAD_2010", backref="person")
+  
+  @validates('birth_year')
+  def validate_number(self, key, value):
+    if isinstance(value, list):
+      value = value[0]
+    if isinstance(value, str) or isinstance(value, unicode):
+      value = value.replace(',','').strip()
+    
+    return float( value ) if value else None
+    
+  @validates('first_name', 'last_name', 'city', 'state', 'zipcode', 'middle_name', 'job_title', 'employer')
+  def validate_string(self, key, value):
+    if isinstance(value, list):
+      value = reduce(lambda x, y: x+y, value)
+    value = value.strip()
+    
+    return value
+
+  @validates('cities')
+  def validate_list(self, key, value):
+    return reduce(lambda x, y: "%s:%s" % (x,y), value)
+    
 class TCAD_2010(Base):
   __tablename__ = '2010 TCAD Parcels'
   __table_args__ = {'schema':'gis_schema'}  
@@ -266,6 +309,8 @@ class TCAD_2010(Base):
   
   improvements = relation("TCADImprovement", backref="parcel")
   historical_values = relation("TCADValueHistory", backref="parcel")
+  
+  person_id = Column(Integer, ForeignKey('gis_schema.person.id'))
 
   @property
   def identity(self):

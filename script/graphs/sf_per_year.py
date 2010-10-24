@@ -21,11 +21,14 @@ from unum.units import *
 from giscrape import orm
 from giscrape.orm import *
 
+import matplotlib as mpl
+mpl.rcParams['font.size'] = 8
+
 def main(argv=None):
 
-  fig = plt.figure()
+  fig = plt.figure(figsize=(3,2.5))
   
-  fig.suptitle("Residential Growth by Year", fontsize=18, weight='bold')
+  #fig.suptitle("Residential Growth by Year", fontsize=18, weight='bold')
   s = Session()
   
   region = s.query(Context).get(3)
@@ -45,6 +48,8 @@ def main(argv=None):
   ax.axis([1980,2010,0,None])
   ax.legend([p1[0],p2[0]],['East Side', 'All Austin'], loc='upper left')
     
+  plt.subplots_adjust(right=.93, top=.95, bottom=.15, left=.15)
+  
   show()
 
 if __name__ == "__main__":

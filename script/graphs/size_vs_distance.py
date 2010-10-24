@@ -20,11 +20,14 @@ from unum.units import *
 from giscrape import orm
 from giscrape.orm import *
 
+import matplotlib as mpl
+mpl.rcParams['font.size'] = 8
+
 def main(argv=None):
 
-  fig = plt.figure(figsize=(10.5,7.5))
+  fig = plt.figure(figsize=(3,2.5))
   
-  fig.suptitle("Size Distribution by Distance", fontsize=18, weight='bold')
+  #fig.suptitle("Size Distribution by Distance", fontsize=18, weight='bold')
   shady = WKTSpatialElement("POINT(%s %s)" % (-97.699009500000003, 30.250421899999999) )
   session = Session()
 
@@ -54,6 +57,7 @@ def main(argv=None):
     ax.axis([vmin,vmax,0,None])
     #ax.set_xticks(np.arange(0,vmax,250000))
     ax.set_ylabel(context.name.replace(' ','\n'), rotation=0)
+    ax.yaxis.set_major_formatter(NullFormatter())
     
     if not i+1 == contexts.count():
       ax.xaxis.set_major_formatter(NullFormatter())
@@ -63,6 +67,8 @@ def main(argv=None):
     
     ax.grid(True)
     
+  plt.subplots_adjust(right=.95, top=.95, bottom=.15, left=.22)
+  
   show()
 
 if __name__ == "__main__":

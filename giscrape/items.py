@@ -4,6 +4,20 @@
 # http://doc.scrapy.org/topics/items.html
 from scrapy.item import Item, Field
 
+class PersonItem(Item):
+  first_name = Field()
+  middle_name = Field()
+  last_name = Field()
+  city = Field()
+  state = Field()
+  zipcode = Field()
+  prop_ref = Field()
+  
+  cities = Field()
+  age = Field()
+  job_title = Field()
+  employer = Field()
+    
 class TCADParcelItem(Item):
   url = Field()
   prop_id = Field()

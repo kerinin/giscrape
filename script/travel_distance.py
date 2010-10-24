@@ -46,8 +46,8 @@ def main(argv=None):
     LAT = '30.250421899999999'
     LON = '-97.699009500000003'
     ORIGIN = "Shady Lane"
-    MODE = "bicycling"
-    RADIUS = TravelTimePoint.radius_1000
+    MODE = "driving"
+    RADIUS = TravelTimePoint.radius_5000
     ORIGIN_POINT = WKTSpatialElement("POINT(%s %s)" % (LON, LAT) )
     
     s=Session()

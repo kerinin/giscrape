@@ -33,6 +33,22 @@ class SQLBackend(object):
         obj =  orm.Listing(**output)
       elif( isinstance(output, items.ListingItem) ):
         obj =  orm.Listing(**output)
+      elif( isinstance(output, items.PersonItem) ):
+        if 'age' in output.keys() and len(output['age']) == 1:
+          birth_year = (datetime.now() - timedelta(days=365*int(output['age'][0]))).year
+          del output['age']
+          prop = session.query(orm.TCAD_2010).get( int( output['prop_ref'][0] ) )
+          del output['prop_ref']
+          
+          ref = session.query(orm.Person).filter(orm.Person.first_name == output['first_name'][0]).filter(orm.Person.last_name == output['last_name'][0]).filter(orm.Person.city == output['city'][0]).filter(orm.Person.state == output['state'][0]).filter(orm.Person.zipcode == output['zipcode'][0]).first()
+          if ref:
+            obj = orm.Person(id=ref.id, birth_year = birth_year, **output)
+          else:
+            obj = orm.Person(birth_year = birth_year, **output)
+            
+          prop.person = obj
+          session.merge(prop)
+          
       elif( isinstance(output, items.TCADParcelItem) ):
         parcel = session.query(orm.TCAD_2010).filter(orm.TCAD_2010.prop_id == int( output['prop_id'][0] ) )
         if parcel.count() == 1:
