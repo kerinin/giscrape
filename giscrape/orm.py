@@ -7,7 +7,7 @@ from sqlalchemy.orm import *
 from sqlalchemy.orm.interfaces import *
 from geoalchemy import *
 
-engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=False)
+engine = create_engine('postgresql://postgres:kundera2747@localhost/gisdb', echo=True)
 metadata = MetaData(engine)
 Base = declarative_base(metadata=metadata)
 Session = sessionmaker(bind=engine)
@@ -17,6 +17,16 @@ DefaultDialect = engine.dialect
 class Fail(StandardError):
   pass
      
+class PropertyHistory(Base):
+  __tablename__ = 'property_history'
+  __table_args__ = {'schema':'gis_schema'}
+  
+  id = Column(Integer, primary_key=True, index=True)
+  property_id = Column(Integer, ForeignKey('gis_schema.property.id'))
+  
+  status = Column(String)
+  price = Column(Float, index=True)
+  date = Column(DateTime)
   
 class Property(Base):
   __tablename__ = 'property'
@@ -55,6 +65,8 @@ class Property(Base):
   #tcad_2008_id = Column(Integer, ForeignKey('gis_schema.2008 TCAD Parcels.gid'))
   tcad_2008_id = Column(Integer, ForeignKey('gis_schema.2008 TCAD Parcels.gid'))
   tcad_2008_parcel = relationship("TCAD_2008", backref="rentals")  
+  
+  historical_values = relation("PropertyHistory", backref="property")
   
   @property
   def identity(self):
@@ -312,6 +324,8 @@ class TCAD_2010(Base):
   
   person_id = Column(Integer, ForeignKey('gis_schema.person.id'))
 
+  last_crawl = Column(DateTime)
+  
   @property
   def identity(self):
     return self.prop_id
